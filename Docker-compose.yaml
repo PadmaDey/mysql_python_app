@@ -1,0 +1,52 @@
+services:
+  mysql_app:
+    image: mysql:9.3
+    container_name: mysql_app
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: Klizos@123
+      MYSQL_DATABASE: mydb_1
+      MYSQL_USER: myuser_1
+      MYSQL_PASSWORD: qwerty
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - localnet
+  
+  app:
+    build:
+      context: .
+    container_name: python_app
+    depends_on:
+      - mysql_app
+    networks:
+      - localnet
+
+volumes:
+  mysql_data:
+
+networks:
+  localnet:
+    driver: bridge
+
+## docker compose up --build
+
+# docker compose build
+# docker compose up -d 
+# docker compose run --rm --service-ports app bash
+
+# host: mysql_app
+# user: root
+# password: Klizos@123
+
+# host: mysql_app
+# user: myuser_1
+# password: qwerty
+
+
+# from dockerhub image:
+# 1. docker pull deypadma/python_mysql_app:0.0.1
+# 2. docker network create my_network
+# 3. docker run -d --network my_network --name mysql_app -e MYSQL_ROOT_PASSWORD=Klizos@123 -p 3306:3306 mysql:latest
+# 4. docker run -it --network my_network -p 5000:5000 --name my-python-mysql-container deypadma/python_mysql_app:0.0.1
