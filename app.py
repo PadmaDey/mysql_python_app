@@ -48,5 +48,7 @@ while True:
         result = cursor.fetchall()
         print("Executed query output: \n", result)
 
+
+
         conn.commit()
  
