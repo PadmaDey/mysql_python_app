@@ -41,3 +41,6 @@ def show_databases(cursor):
 
 #### net stop MYSQL80
 #### net start MYSQL80
+
+#### git rm --cached <file>
+#### git commit -m "Remove <file> from repository"
