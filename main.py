@@ -1,3 +1,4 @@
+import os
 import re
 from dotenv import load_dotenv
 import mysql.connector as mysql_conn
@@ -7,19 +8,19 @@ from log_config import logger
 def get_connection():
     load_dotenv()
     try:
-        host = input("Enter your MySQL Hostname (e.g., localhost): ").strip()
-        user = input("Enter your MySQL Username (e.g., root): ").strip()
-        port_input = input("Enter your port where MySQL Server is running (e.g., 3306): ")
-        if not port_input.isdigit():
-            raise ValueError("Port must be a number.")
-        port = int(port_input)
-        password = getpass("Enter your MySQL Password: ").strip()
+        # host = input("Enter your MySQL Hostname (e.g., localhost): ").strip()
+        # user = input("Enter your MySQL Username (e.g., root): ").strip()
+        # port_input = input("Enter your port where MySQL Server is running (e.g., 3306): ")
+        # if not port_input.isdigit():
+        #     raise ValueError("Port must be a number.")
+        # port = int(port_input)
+        # password = getpass("Enter your MySQL Password: ").strip()
         # password = input("Enter your MySQL Password: ").strip()
 
-        # host = os.getenv("host")
-        # user = os.getenv("user")
-        # port = int(os.getenv("port", 3306))
-        # password = os.getenv("password")
+        host = os.getenv("host")
+        user = os.getenv("user")
+        port = int(os.getenv("port", 3306))
+        password = os.getenv("password")
 
     except ValueError as ve:
         logger.warning("Port must be a number.: %s", ve)
@@ -302,19 +303,30 @@ def drop_db_table(cursor):
 
 def execute_custom_query(cursor):
     try:
-        query = input("Enter your custom SQL query to perform custom operations (e.g., DQL[select], DCL[grant, revoke], TCL[commit, rollback] etc.): ").strip()
+        allowed_keywords = {'truncate', 'select', 'grant', 'revoke', 'commit', 'rollback'}
+        
+        query = input("Enter your custom SQL query to perform custom operations (e.g., DDL[truncate], DQL[select], DCL[grant, revoke], TCL[commit, rollback] etc.): ").strip()
+        
         if not query:
             logger.warning("No query entered. Operation aborted.")
             print("No query entered. Operation aborted.")
             return
-        
+
+        # Extract the first word (SQL command) from the query
+        command = query.split()[0].lower()
+
+        if command not in allowed_keywords:
+            logger.warning("Operation %s is not allowed. Allowed operations are: {', '.join(%s)}.", command, allowed_keywords)
+            print(f"Operation '{command}' is not allowed. Allowed operations are: {', '.join(allowed_keywords)}.")
+            return
+
         cursor.execute(query)
 
-        if query.lower().startswith("select"):
+        if command == "select":
             rows = cursor.fetchall()
             if rows:
-                logger.info("Query Results: ")
-                print("Query Results: ")
+                logger.info("Query Results:")
+                print("Query Results:")
                 for row in rows:
                     logger.info('%s', row)
                     print(row)
@@ -331,6 +343,7 @@ def execute_custom_query(cursor):
     except Exception as e:
         logger.error("Unexpected error during query execution: %s", e)
         print(f"Unexpected error during query execution: {e}")
+
 
 def main():
     conn = None
@@ -356,47 +369,82 @@ def main():
         print(f"Unexpected error during setup: {e}")
 
     else:
-        try:
-            show_databases(cursor)
-            create_database(cursor)
-            conn.commit()
+        db_name = None
+        while True:
+            print("\nChoose an option from below:")
+            print("1. Display All available Databases.")
+            print("2. Create a new Database.")
+            print("3. Choose a Database you want to use.")
+            print("4. Display All available Tables.")
+            print("5. Create a new Table.")
+            print("6. Insert data into table.")
+            print("7. Update an existing table.")
+            print("8. Alter an existing table.")
+            print("9. Delete data from table.")
+            print("10. Drop a database/table.")
+            print("11. Enter a custom query['truncate', 'select', 'grant', 'revoke', 'commit', 'rollback'].")
+            print("12. Exit.")
 
-            db_name = input("Enter the database name you want to insert data into: ").strip()
-            use_database(cursor, db_name)
+            choice = input("\nEnter your choice: ").strip()
 
-            show_tables(cursor)
-            create_table(cursor)
-            conn.commit()
+            try:
+                if choice == '1':
+                    show_databases(cursor)
 
-            show_tables(cursor)
-            table_name = input("Enter the table name you want to insert data into: ").strip()
-            insert_data(cursor, table_name)
-            conn.commit()
+                elif choice == '2':
+                    create_database(cursor)
+                    conn.commit()
 
-            show_tables(cursor)
-            table_name = input("Enter the table name you want to update data: ").strip()
-            update_data(cursor, table_name)
-            conn.commit()
+                elif choice == '3':
+                    db_name = input("Enter the database name you want to use: ").strip()
+                    use_database(cursor, db_name)
+                    logger.info(f"Using database: {db_name}")
 
-            show_tables(cursor)
-            table_name = input("Enter the table name you want to alter: ").strip()
-            alter_data(cursor, table_name)
-            conn.commit()
+                elif choice == '4':
+                    show_tables(cursor)
 
-            show_tables(cursor)
-            table_name = input("Enter the table name from where you want to delete data: ").strip()
-            delete_data(cursor, table_name)
-            conn.commit()
+                elif choice == '5':
+                    create_table(cursor)
+                    conn.commit()
 
-            drop_db_table(cursor)
-            conn.commit()
+                elif choice == '6':
+                    table_name = input("Enter the table name you want to insert data into: ").strip()
+                    insert_data(cursor, table_name)
+                    conn.commit()
 
-            execute_custom_query(cursor)
-            conn.commit()
+                elif choice == '7':
+                    table_name = input("Enter the table name you want to update data: ").strip()
+                    update_data(cursor, table_name)
+                    conn.commit()
 
-        except Exception as e:
-            logger.error("Error during DB operations: %s", e)
-            print(f"Error during DB operations: {e}")
+                elif choice == '8':
+                    table_name = input("Enter the table name you want to alter: ").strip()
+                    alter_data(cursor, table_name)
+                    conn.commit()
+
+                elif choice == '9':
+                    table_name = input("Enter the table name from where you want to delete data: ").strip()
+                    delete_data(cursor, table_name)
+                    conn.commit()
+
+                elif choice == '10':
+                    drop_db_table(cursor)
+                    conn.commit()
+
+                elif choice == '11':
+                    execute_custom_query(cursor)
+                    conn.commit()
+
+                elif choice == '12':
+                    print("Exiting the application.")
+                    break
+
+                else:
+                    print("Invalid choice. Please select a valid option (1-12).")
+
+            except Exception as op_err:
+                logger.error("Error during selected DB operation: %s", op_err)
+                print(f"Error during selected DB operation: {op_err}")
 
     finally:
         if cursor:
@@ -407,8 +455,7 @@ def main():
         print("\nMySQL connection closed.")
 
 
-
 if __name__ == "__main__":
     main()
     
-    print("\nTest print to check main.py script is running properly...")
+    # print("\nTest print to check main.py script is running properly...")
