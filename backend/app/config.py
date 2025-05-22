@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 from starlette.config import Config
 
-config = Config(".env")
+config = Config("app/.env")
 
 
 class Settings(BaseSettings):
