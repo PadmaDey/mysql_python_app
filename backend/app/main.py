@@ -3,7 +3,7 @@ import re
 from dotenv import load_dotenv
 import mysql.connector as mysql_conn
 from getpass import getpass
-from log_config import logger
+from backend.app.logger import logger
 
 def get_connection():
     load_dotenv()
