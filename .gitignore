@@ -103,7 +103,6 @@ Desktop.ini
 
 # dotenv files (if sensitive)
 .env
-.env.*
 
 # Local scripts/output
 *.bak
