@@ -2,3 +2,4 @@ logs/
 mysql_conn_venv/
 .env
 py_sql_conn.py
+**/__pycache__/
