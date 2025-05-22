@@ -1,7 +1,0 @@
-mysql-connector-python==9.3.0
-
-fastapi[standard]
-uvicorn
-pydantic
-
-dotenv

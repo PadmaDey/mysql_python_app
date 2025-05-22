@@ -1,0 +1,23 @@
+services:
+  database:
+    image: mysql:latest
+    container_name: db
+    ports:
+      - "3306:3306"
+    env_file:
+      - ./db/.env
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+  
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: api
+    depends_on:
+      - db
+    restart: on-failure
+
+volumes:
+  mysql_data:
