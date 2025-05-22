@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 from starlette.config import Config
 
 config = Config(".env")
@@ -10,8 +10,8 @@ class Settings(BaseSettings):
     """
 
     # Server Configs
-    PORT: int = config("PORT", default=8000)
-    DEBUG: bool = config("DEBUG", default=False)
+    PORT: int = config("PORT", cast=int, default=8000)
+    DEBUG: bool = config("DEBUG", cast=bool, default=False)
 
     # Database configs
     MYSQL_DATABASE: str = config("MYSQL_DATABASE")
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     MYSQL_PASSWORD: str = config("MYSQL_PASSWORD")
 
     MYSQL_HOST: str = config("MYSQL_HOST", default="mysql")
-    MYSQL_PORT: int = config("MYSQL_PORT", default=3306)
+    MYSQL_PORT: int = config("MYSQL_PORT", cast=int, default=3306)
 
 
 settings = Settings()
