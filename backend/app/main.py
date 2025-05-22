@@ -46,6 +46,7 @@ async def add_user(user: schemas.User):
 
     return JSONResponse(status_code=status.HTTP_201_CREATED, content={"msg": "User created successfully", "status": True})
 
+
 @app.get("/api/users/get-all", summary="Get all users")
 async def get_all_users():
     cursor.execute("SELECT * FROM users")
