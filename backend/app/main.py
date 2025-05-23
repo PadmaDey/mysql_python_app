@@ -5,6 +5,7 @@ from app.db import conn, cursor
 from app.utils import get_current_utc_time, get_password_hash, verify_password
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse
+from app.logger import logger
 
 from datetime import datetime
 
@@ -13,6 +14,7 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
+    logger.info("route is working fine!")
     return {"msg": "ok"}
 
 
@@ -49,8 +51,9 @@ async def add_user(user: schemas.User):
 
         return JSONResponse(status_code=status.HTTP_201_CREATED, content={"msg": "User created successfully", "status": True})
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error("Error: %s", e)
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
+
 
 def serialize_row(row):
     return [
@@ -58,18 +61,68 @@ def serialize_row(row):
         for item in row
     ]
 
+
 @app.get("/api/users/get-all", summary="Get all users")
 async def get_all_users():
     try:
-        print("test")
         cursor.execute("SELECT * FROM users;")
         raw_users = cursor.fetchall()
         users = [serialize_row(row) for row in raw_users]
+
         return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": users})
+    
     except Exception as e:
-        print(f"Error: {e}")
+        logger.error("Error: %s", e)
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False, "data": users})
 
+@app.put("/api/users/update-data", summary="update existing data")
+async def update_data(user: schemas.Update_user):
+    try:
+        update_fields=[]
+        values=[]
+
+        if user.name is not None:
+            if len(user.name) <= 2:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name should be at least 3 charecters")
+            update_fields.append("name = %s")
+            values.append(user.name)
+
+        if user.phone_no is not None:
+            if len(user.phone_no) != 10 and user.phone_no.isdigit():
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone no should be 10 digit")
+            update_fields.append("phone_no = %s")
+            values.append(user.phone_no)
+
+        if not update_fields:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provided fields are not valid")
+
+        update_fields.append("updated_at = %s")
+        values.append(get_current_utc_time())
+
+        query = f"update users set {', '.join(update_fields)} where email = '{user.email}';"
+        cursor.execute(query, tuple(values))
+        conn.commit()
+
+        return JSONResponse(status_code=status.HTTP_202_ACCEPTED, content={"msg": "User data updated successfully", "status": True})
+    
+    except Exception as e:
+        logger.error("Error: %s", e)
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg":f"{e}", "status": False})
+
+
+@app.delete("/api/users/delete-data", summary="Delete a user data")
+async def del_user(user: schemas.Delete_user):
+    try:
+        query = f"delete from users where email= '{user.email}';"
+        cursor.execute(query)
+        conn.commit()
+        
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"msg": "User deleted successfully", "status": True})
+    
+    except Exception as e:
+        logger.error("Error: %s", e)
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg":f"{e}", "status": False})
+    
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.HOST, port=settings.PORT, debug=settings.DEBUG)

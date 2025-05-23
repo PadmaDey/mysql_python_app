@@ -10,4 +10,4 @@ logs:
 	docker compose logs -f
 
 local:
-	cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8080

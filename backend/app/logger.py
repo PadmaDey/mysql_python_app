@@ -18,4 +18,4 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("app")
-logging.disable(logging.CRITICAL)
+# logging.disable(logging.CRITICAL)

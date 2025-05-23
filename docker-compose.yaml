@@ -22,7 +22,7 @@ services:
       - mysql
     restart: on-failure
     ports:
-      - "8000:8000"
+      - "8080:8080"
     networks:
       - my_app_net
     env_file:
