@@ -2,14 +2,15 @@ annotated-types==0.7.0
 anyio==4.9.0
 bcrypt==4.3.0
 black==25.1.0
-click==8.2.1
+# click==8.2.1
+click<8.2,>=8.0.0
 colorama==0.4.6
 fastapi==0.115.12
 h11==0.16.0
 idna==3.10
-isort==6.0.1
+# isort==6.0.1
 mypy_extensions==1.1.0
-mysql-connector==2.2.9
+# mysql-connector==2.2.9
 packaging==25.0
 passlib==1.7.4
 pathspec==0.12.1
@@ -25,3 +26,4 @@ typing-inspection==0.4.1
 typing_extensions==4.13.2
 uvicorn==0.34.2
 wheel==0.45.1
+mysql-connector-python

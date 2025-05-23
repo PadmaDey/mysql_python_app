@@ -9,6 +9,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./db/schema:/docker-entrypoint-initdb.d
+    networks:
+      - my_app_net
     restart: unless-stopped
   
   api:
@@ -21,8 +23,14 @@ services:
     restart: on-failure
     ports:
       - "8000:8000"
+    networks:
+      - my_app_net
     env_file:
       - ./env/backend/.env
       
 volumes:
   mysql_data:
+
+networks:
+  my_app_net:
+    driver: bridge

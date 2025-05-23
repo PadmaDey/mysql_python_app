@@ -6,7 +6,14 @@ from mysql.connector.connection import MySQLConnection
 
 def connect_to_db():
     try:
-        conn = connect(host=settings.MYSQL_HOST, port=settings.MYSQL_PORT, user=settings.MYSQL_USER, password=settings.MYSQL_PASSWORD)
+        conn = connect(
+            host=settings.MYSQL_HOST, 
+            port=settings.MYSQL_PORT, 
+            user=settings.MYSQL_USER, 
+            password=settings.MYSQL_PASSWORD,
+            database=settings.MYSQL_DATABASE,
+            auth_plugin='mysql_native_password'  # Ensures compatibility
+            )
 
         if conn.is_connected():
             logger.info("Successfully connected to MySQL")
