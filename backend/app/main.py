@@ -3,7 +3,7 @@ from app import schemas
 from app.config import settings
 from app.db import conn, cursor
 from app.utils import get_current_utc_time, get_password_hash, verify_password
-from fastapi import FastAPI, HTTPException, status
+from fastapi import FastAPI, HTTPException, status, Path, Query
 from fastapi.responses import JSONResponse
 from app.logger import logger
 from app.auth import create_access_token, decode_access_token
@@ -25,11 +25,15 @@ async def add_user(user: schemas.User):
         payload = user.model_dump()
 
         # Validation
-        if len(payload.get("name")) <= 2:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name should be at least 2 characters")
+        # if len(payload.get("name")) <= 2:
+        #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name should be at least 2 characters")
 
-        if "@" not in payload.get("email"):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email")
+        # if "@" not in payload.get("email"):
+        #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email")
+
+        # if user.phone_no is not None:
+        #     if len(user.phone_no) != 10 and user.phone_no.isdigit():
+        #         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone no should be 10 digit")
 
         payload["password"] = get_password_hash(payload.get("password"))
 
@@ -63,7 +67,7 @@ async def login_user(user: schemas.Login):
     try:
         query = "select * from users where email = %s;"
         cursor.execute(query, (user.email,))
-        db_user = cursor.fetchall()
+        db_user = cursor.fetchone()
 
         if not db_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -96,9 +100,10 @@ async def verify_user(user: schemas.VerifyUser):
         
         query = "select * from users where email = %s"
         cursor.execute(query, (email,))
-        
-        db_user = cursor.fetchall()
-        serialized_user = [serialize_row(row) for row in db_user]
+
+        db_user = cursor.fetchone()
+        # serialized_user = [serialize_row(row) for row in db_user]
+        serialized_user =serialize_row(db_user)
         if not db_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, details= "User data not found")
         
@@ -109,10 +114,10 @@ async def verify_user(user: schemas.VerifyUser):
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
 
 
-@app.get("/api/users/get-all", summary="Get all users")
+@app.get("/api/users", summary="Get all users")
 async def get_all_users():
     try:
-        cursor.execute("SELECT * FROM users;")
+        cursor.execute("select * from users;")
         raw_users = cursor.fetchall()
         users = [serialize_row(row) for row in raw_users]
 
@@ -120,27 +125,51 @@ async def get_all_users():
     
     except Exception as e:
         logger.error("Error: %s", e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False, "data": users})
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
+
+
+@app.get("/api/users/{name}", summary="Get a particular users")
+async def get_all_users(name: str = Path(..., description="Name of the User", example="Test")): # , sort_by: str = Query(..., description="Sort by Name", order: str = Query('asc', description='sort in asc or desc order')
+    user= None
+    try:
+        name = name.strip().title()
+        query = "select * from users where name = %s;"
+        cursor.execute(query,(name,))
+        raw_user = cursor.fetchone()
+        if not raw_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+        user = serialize_row(raw_user)
+
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": user})
+    
+    except Exception as e:
+        logger.error("Error: %s", e)
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
 
 
 
 @app.put("/api/users/update-data", summary="update existing data")
 async def update_data(user: schemas.Update_user):
     try:
+        cursor.execute("select * from users where email = %s", (user.email,))
+        if cursor.fetchone() is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email does not exist")
+
         update_fields=[]
         values=[]
 
-        if user.name is not None:
-            if len(user.name) <= 2:
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name should be at least 3 charecters")
-            update_fields.append("name = %s")
-            values.append(user.name)
+        # if user.name is not None:
+        #     if len(user.name) <= 2:
+        #         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name should be at least 3 charecters")
+        update_fields.append("name = %s")
+        values.append(user.name)
 
-        if user.phone_no is not None:
-            if len(user.phone_no) != 10 and user.phone_no.isdigit():
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone no should be 10 digit")
-            update_fields.append("phone_no = %s")
-            values.append(user.phone_no)
+        # if user.phone_no is not None:
+        #     if len(user.phone_no) != 10 and user.phone_no.isdigit():
+        #         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone no should be 10 digit")
+        update_fields.append("phone_no = %s")
+        values.append(user.phone_no)
 
         if not update_fields:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provided fields are not valid")
@@ -163,10 +192,13 @@ async def update_data(user: schemas.Update_user):
 @app.delete("/api/users/delete-data", summary="Delete a user data")
 async def del_user(user: schemas.Delete_user):
     try:
+        cursor.execute("select * from users where email = %s", (user.email,))
+        if cursor.fetchone() is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email does not exist")
+
         query = "delete from users where email= %s;"
         cursor.execute(query, (user.email,))
         conn.commit()
-        
         
         return JSONResponse(status_code=status.HTTP_200_OK, content={"msg": "User deleted successfully", "status": True})
     
