@@ -17,3 +17,10 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def get_password_hash(password: str) -> str:
     """Generate password hash from plain password"""
     return pwd_context.hash(password)
+
+
+def serialize_row(row):
+    return [
+        item.isoformat() if isinstance(item, datetime) else item
+        for item in row
+    ]

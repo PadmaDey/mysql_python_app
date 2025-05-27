@@ -2,7 +2,7 @@ import uvicorn
 from app import schemas
 from app.config import settings
 from app.db import conn, cursor
-from app.utils import get_current_utc_time, get_password_hash, verify_password
+from app.utils import get_current_utc_time, get_password_hash, verify_password, serialize_row
 from fastapi import FastAPI, HTTPException, status, Path, Query
 from fastapi.responses import JSONResponse
 from app.logger import logger
@@ -24,17 +24,6 @@ async def add_user(user: schemas.User):
     try:
         payload = user.model_dump()
 
-        # Validation
-        # if len(payload.get("name")) <= 2:
-        #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name should be at least 2 characters")
-
-        # if "@" not in payload.get("email"):
-        #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email")
-
-        # if user.phone_no is not None:
-        #     if len(user.phone_no) != 10 and user.phone_no.isdigit():
-        #         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone no should be 10 digit")
-
         payload["password"] = get_password_hash(payload.get("password"))
 
         c_time = get_current_utc_time()
@@ -54,8 +43,6 @@ async def add_user(user: schemas.User):
         )
         conn.commit()
 
-        # token = create_access_token({"email": payload.get("email")}, timedelta(minutes=15))
-
         return JSONResponse(status_code=status.HTTP_201_CREATED, content={"msg": "User created successfully", "status": True})
     except Exception as e:
         logger.error("Error: %s", e)
@@ -72,19 +59,17 @@ async def login_user(user: schemas.Login):
         if not db_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         
+        hashed_password = db_user[4] 
+
+        if not verify_password(user.password, hashed_password):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
+    
         token = create_access_token({"email": user.email}, timedelta(minutes=15))
 
         return JSONResponse(status_code=status.HTTP_201_CREATED, content={"token": token, "msg": "User logged in successfully", "status": True})
     except Exception as e:
         logger.error("Error: %s", e)
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
-
-
-def serialize_row(row):
-    return [
-        item.isoformat() if isinstance(item, datetime) else item
-        for item in row
-    ]
 
 
 @app.post("/api/users/verify-user", summary="Verifying the logged in credential matching with stored credential")
@@ -102,7 +87,6 @@ async def verify_user(user: schemas.VerifyUser):
         cursor.execute(query, (email,))
 
         db_user = cursor.fetchone()
-        # serialized_user = [serialize_row(row) for row in db_user]
         serialized_user =serialize_row(db_user)
         if not db_user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, details= "User data not found")
@@ -158,16 +142,9 @@ async def update_data(user: schemas.Update_user):
 
         update_fields=[]
         values=[]
-
-        # if user.name is not None:
-        #     if len(user.name) <= 2:
-        #         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Name should be at least 3 charecters")
         update_fields.append("name = %s")
         values.append(user.name)
 
-        # if user.phone_no is not None:
-        #     if len(user.phone_no) != 10 and user.phone_no.isdigit():
-        #         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone no should be 10 digit")
         update_fields.append("phone_no = %s")
         values.append(user.phone_no)
 
@@ -205,7 +182,10 @@ async def del_user(user: schemas.Delete_user):
     except Exception as e:
         logger.error("Error: %s", e)
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg":f"{e}", "status": False})
-    
+
+
+
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.HOST, port=settings.PORT, debug=settings.DEBUG)
