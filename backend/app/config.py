@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     MYSQL_USER: str = config("MYSQL_USER", default='emp_1')
     MYSQL_PASSWORD: str = config("MYSQL_PASSWORD", default='qwerty')
 
-    MYSQL_HOST: str = config("MYSQL_HOST", default="localhost")
+    # MYSQL_HOST: str = config("MYSQL_HOST", default="localhost")
+    MYSQL_HOST: str = config("MYSQL_HOST", default="mysql")
     MYSQL_PORT: int = config("MYSQL_PORT", cast=int, default=3306)
 
 

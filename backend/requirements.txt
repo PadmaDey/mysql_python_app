@@ -26,4 +26,11 @@ typing-inspection==0.4.1
 typing_extensions==4.13.2
 uvicorn==0.34.2
 wheel==0.45.1
+
 mysql-connector-python
+
+
+uvicorn[standard]
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]

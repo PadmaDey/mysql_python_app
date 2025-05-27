@@ -3,3 +3,5 @@ mysql_conn_venv/
 .env
 py_sql_conn.py
 **/__pycache__/
+
+backend/app/SECRET_KEY.ipynb
