@@ -34,7 +34,6 @@ class User(BaseModel):
 
 class Update_user(BaseModel):
     name: Optional[str] = None
-    email: Optional[EmailStr] = None
     phone_no: Optional[int] = None
 
     @field_validator('name', mode='after')
@@ -43,11 +42,6 @@ class Update_user(BaseModel):
         if len(value.strip()) >= 3:
             return value.title()
         raise ValueError("Name should be at least 3 charecters")
-    
-    @field_validator('email')
-    @classmethod
-    def transform_email(cls, value):
-        return value.lower()
 
     @field_validator('phone_no', mode='after')
     @classmethod
@@ -57,38 +51,37 @@ class Update_user(BaseModel):
                 return value
             raise ValueError("Phone number must be a 10-digit integer")
         return value
-        
-
-
-# class ParticularUser(BaseModel):
-#     name: str
-
-#     @field_validator('name', mode='after')
-#     @classmethod
-#     def validate_name(cls, value):
-#         if len(value.strip()) >= 3:
-#             return value.title()
-#         raise ValueError("Name should be at least 3 charecters")
     
 
 
 class Delete_user(BaseModel):
     email: Optional[EmailStr] = None
 
+
+
 class Expires_delta(BaseModel):
     expires_delta: Optional[timedelta] = None
+
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
+
 class TokenData(BaseModel):
-    username: Optional[str] = None
-    # username: str | None = None
+    email: EmailStr 
+
+
 
 class Login(BaseModel):
     email: EmailStr
     password: str
 
+
+
 class VerifyUser(BaseModel):
     token: str
+
+

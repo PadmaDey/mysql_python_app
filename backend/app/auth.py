@@ -3,8 +3,11 @@ from dotenv import load_dotenv
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta
 from jose import JWTError, jwt
+from fastapi import Depends, HTTPException, status
 from app import schemas
-from app.utils import get_current_utc_time
+from app.utils import get_current_utc_time, get_user
+from app.schemas import TokenData
+
 
 
 load_dotenv()
@@ -34,3 +37,23 @@ def decode_access_token(token):
         return jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
     except JWTError:
         return None
+
+
+def get_curent_user(token: str = Depends(oauth2_scheme)):
+    credential_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials", headers={"WWW-Authenticate": "Bearer"})
+    try:
+        payload = decode_access_token(token)
+        email = payload.get("email")
+        if email is None:
+            raise credential_exception
+        
+    except JWTError:
+        raise credential_exception
+    
+    user = get_user(email)
+    if user is None:
+        raise credential_exception
+    
+    return user[2]
+
+
