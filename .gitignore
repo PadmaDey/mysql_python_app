@@ -4,4 +4,4 @@ mysql_conn_venv/
 py_sql_conn.py
 **/__pycache__/
 
-backend/app/SECRET_KEY.ipynb
+docker.txt

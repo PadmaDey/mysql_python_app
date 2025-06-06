@@ -1,12 +1,12 @@
 import uvicorn
 from app import schemas
-from app.config import settings
-from app.db import conn, cursor
+from app.models import settings
+from app.models import conn, cursor
 from app.utils import get_current_utc_time, get_password_hash, verify_password, serialize_row
-from fastapi import FastAPI, HTTPException, status, Path, Query, Depends
+from fastapi import FastAPI, HTTPException, status, Path, Depends
 from fastapi.responses import JSONResponse
-from app.logger import logger
-from app.auth import create_access_token, decode_access_token, oauth2_scheme, get_curent_user
+from backend.app.services.logger import logger
+from app.utils import create_access_token, get_curent_user
 
 from datetime import datetime, timedelta
 
@@ -20,7 +20,7 @@ def read_root():
 
 
 @app.post("/api/users/signup", summary="Add a new user")
-async def add_user(user: schemas.User):
+async def signup_user(user: schemas.User):
     try:
         payload = user.model_dump()
 
@@ -70,32 +70,6 @@ async def login_user(user: schemas.Login):
     except Exception as e:
         logger.error("Error: %s", e)
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
-
-
-# @app.post("/api/users/verify-user", summary="Verifying the logged in credential matching with stored credential")
-# async def verify_user(user: schemas.VerifyUser):
-#     try:
-#         payload = decode_access_token(user.token)
-#         if not payload:
-#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token is invalid or expired")
-        
-#         email = payload.get("email")
-#         if not email:
-#             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User email unauthorised")
-        
-#         query = "select * from users where email = %s"
-#         cursor.execute(query, (email,))
-
-#         db_user = cursor.fetchone()
-#         serialized_user =serialize_row(db_user)
-#         if not db_user:
-#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, details= "User data not found")
-        
-#         return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": serialized_user})
-
-#     except Exception as e:
-#         logger.error("Error: %s", e)
-#         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
 
 
 @app.get("/api/users", summary="Get all users")

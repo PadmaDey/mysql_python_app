@@ -1,5 +1,4 @@
 from typing import Optional
-from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr, field_validator
 
 
@@ -59,29 +58,6 @@ class Delete_user(BaseModel):
 
 
 
-class Expires_delta(BaseModel):
-    expires_delta: Optional[timedelta] = None
-
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-
-
-class TokenData(BaseModel):
-    email: EmailStr 
-
-
-
 class Login(BaseModel):
     email: EmailStr
     password: str
-
-
-
-class VerifyUser(BaseModel):
-    token: str
-
-
