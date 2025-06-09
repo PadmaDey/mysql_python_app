@@ -73,6 +73,9 @@ async def get_all_users(current_user: dict = Depends(get_current_user)):
 
         return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": users})
     
+    except HTTPException:
+        raise
+    
     except Exception as e:
         logger.error("Error: %s", e)
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
@@ -108,11 +111,14 @@ async def update_data(user: schemas.Update_user, current_user: dict = Depends(ge
 
         update_fields=[]
         values=[]
-        update_fields.append("name = %s")
-        values.append(user.name)
 
-        update_fields.append("phone_no = %s")
-        values.append(user.phone_no)
+        if user.name is not None:
+            update_fields.append("name = %s")
+            values.append(user.name)
+
+        if user.phone_no is not None:
+            update_fields.append("phone_no = %s")
+            values.append(user.phone_no)
 
         if not update_fields:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provided fields are not valid")
@@ -134,14 +140,14 @@ async def update_data(user: schemas.Update_user, current_user: dict = Depends(ge
 
 
 @router.delete("/delete-data", summary="Delete a user data")
-async def del_user(user: schemas.Delete_user):
+async def del_user(current_user: dict = Depends(get_current_user)):
     try:
-        cursor.execute("select * from users where email = %s", (user.email,))
+        cursor.execute("select * from users where email = %s", (current_user,))
         if cursor.fetchone() is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email does not exist")
 
         query = "delete from users where email= %s;"
-        cursor.execute(query, (user.email,))
+        cursor.execute(query, (current_user,))
         conn.commit()
         
         return JSONResponse(status_code=status.HTTP_200_OK, content={"msg": "User deleted successfully", "status": True})
@@ -149,3 +155,5 @@ async def del_user(user: schemas.Delete_user):
     except Exception as e:
         logger.error("Error: %s", e)
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg":f"{e}", "status": False})
+
+

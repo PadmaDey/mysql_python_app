@@ -14,10 +14,10 @@ def get_user(email: str):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
         return serialize_row(raw_user)
+    
+    except HTTPException:
+        raise
 
     except Exception as e:
         logger.error("Error: %s", e)
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"msg": f"{e}", "status": False}
-        )
+        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")

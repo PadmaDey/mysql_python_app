@@ -50,11 +50,6 @@ class Update_user(BaseModel):
                 return value
             raise ValueError("Phone number must be a 10-digit integer")
         return value
-    
-
-
-class Delete_user(BaseModel):
-    email: Optional[EmailStr] = None
 
 
 
