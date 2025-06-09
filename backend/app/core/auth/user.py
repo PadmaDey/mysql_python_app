@@ -1,8 +1,8 @@
-from app.models import cursor
+from app.db.connection import cursor
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
-from backend.app.services.logger import logger
-from app.utils import serialize_row
+from app.services.logger import logger
+from app.utils.validation import serialize_row
 
 def get_user(email: str):
     try:

@@ -3,8 +3,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from dotenv import load_dotenv
-from app.utils import get_current_utc_time
-from app.utils.auth import get_user
+from app.utils.validation import get_current_utc_time
+from app.core.auth.user import get_user
 import os
 
 load_dotenv()

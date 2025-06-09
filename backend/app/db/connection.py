@@ -1,5 +1,5 @@
-from app.models import settings
-from backend.app.services.logger import logger
+from app.core.config import settings
+from app.services.logger import logger
 from mysql.connector import connect
 from mysql.connector.connection import MySQLConnection
 
