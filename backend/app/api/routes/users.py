@@ -64,6 +64,20 @@ async def login_user(user: schemas.Login):
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
 
 
+@router.get("/", summary="Get all users")
+async def get_all_users(current_user: dict = Depends(get_current_user)):
+    try:
+        cursor.execute("select * from users;")
+        raw_users = cursor.fetchall()
+        users = [serialize_row(row) for row in raw_users]
+
+        return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": users})
+    
+    except Exception as e:
+        logger.error("Error: %s", e)
+        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
+    
+
 @router.get("/me", summary="Get current logged-in user")
 async def get_current_user_data(current_user: dict = Depends(get_current_user)):
     try:

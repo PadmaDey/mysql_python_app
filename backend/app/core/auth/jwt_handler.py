@@ -35,9 +35,13 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = decode_access_token(token)
+        if payload is None:
+            raise credentials_exception
+        
         email = payload.get("email")
         if email is None:
             raise credentials_exception
+        
     except JWTError:
         raise credentials_exception
 
