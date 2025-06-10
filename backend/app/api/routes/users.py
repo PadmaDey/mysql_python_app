@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status, Path, Depends
 from fastapi.responses import JSONResponse
 from app.services.logger import logger
 from app.core.auth.jwt_handler import create_access_token, get_current_user
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -67,10 +67,17 @@ async def login_user(user: schemas.Login):
 @router.get("/", summary="Get all users")
 async def get_all_users(current_user: dict = Depends(get_current_user)):
     try:
+        email = current_user.get("email")
+        if not email:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user session")
+
         cursor.execute("select * from users;")
         raw_users = cursor.fetchall()
-        users = [serialize_row(row) for row in raw_users]
 
+        if not raw_users:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+        users = [serialize_row(row) for row in raw_users]
         return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": users})
     
     except Exception as e:
@@ -87,12 +94,12 @@ async def get_current_user_data(current_user: dict = Depends(get_current_user)):
 
         query = "SELECT * FROM users WHERE email = %s;"
         cursor.execute(query, (email,))
-        raw_user = cursor.fetchone()
+        raw_users = cursor.fetchone()
 
-        if not raw_user:
+        if not raw_users:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-        user = serialize_row(raw_user)
+        user = serialize_row(raw_users)
         return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": user})
 
     except HTTPException:
@@ -161,4 +168,49 @@ async def del_user(current_user: dict = Depends(get_current_user)):
         logger.error("Error: %s", e)
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg":f"{e}", "status": False})
 
+
+@router.post("/log-out", summary="Logout current user")
+async def logout_user(current_user: dict = Depends(get_current_user)):
+    try:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"msg": "User logged out successfully", "status": True}
+        )
+    except Exception as e:
+        logger.error("Logout error: %s", e)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"msg": f"{e}", "status": False}
+        )
+
+
+@router.post("/log-out", summary="Logout current user", tags=["users"])
+async def logout_user(current_user: dict = Depends(get_current_user)):
+    try:
+        jti = current_user.get("jti")
+        exp = current_user.get("exp")
+
+        if not jti or not exp:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing token metadata")
+
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
+
+        query = "INSERT INTO jwt_blacklist (jti, expires_at) VALUES (%s, %s);"
+        cursor.execute(query,(jti, expires_at))
+        conn.commit()
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"msg": "User logged out successfully", "status": True}
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        logger.error("Logout error: %s", e)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"msg": f"An unexpected error occurred: {e}", "status": False}
+        )
 

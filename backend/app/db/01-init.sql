@@ -17,3 +17,12 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Create indexes for better query performance
 CREATE INDEX idx_users_email ON users(email);
+
+
+-- Create jti table
+CREATE TABLE IF NOT EXISTS jwt_blacklist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    jti VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP
+);

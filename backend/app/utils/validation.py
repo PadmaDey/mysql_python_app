@@ -4,13 +4,6 @@ from app.db.connection import cursor
 def get_current_utc_time():
     return datetime.now(timezone.utc)
 
-# def serialize_row(row):
-#     return [
-#         item.isoformat() if isinstance(item, datetime) else item
-#         for item in row
-#     ]
-
-
 def serialize_row(row):
     column_names = [desc[0] for desc in cursor.description]
     return {

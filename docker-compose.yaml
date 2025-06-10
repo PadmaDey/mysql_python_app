@@ -8,7 +8,7 @@ services:
       - ./env/db/.env
     volumes:
       - mysql_data:/var/lib/mysql
-      - /backend/app/db/schema:/docker-entrypoint-initdb.d
+      - /backend/app/db:/docker-entrypoint-initdb.d
     networks:
       - my_app_net
     restart: unless-stopped
@@ -34,3 +34,9 @@ volumes:
 networks:
   my_app_net:
     driver: bridge
+
+
+
+# docker-compose down -v --rmi all --remove-orphans
+# docker system prune -af --volumes
+# docker-compose up --build

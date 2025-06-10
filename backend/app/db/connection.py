@@ -12,7 +12,7 @@ def connect_to_db():
             user=settings.MYSQL_USER, 
             password=settings.MYSQL_PASSWORD,
             database=settings.MYSQL_DATABASE,
-            auth_plugin='mysql_native_password'  # Ensures compatibility
+            auth_plugin='mysql_native_password'
             )
 
         if conn.is_connected():
