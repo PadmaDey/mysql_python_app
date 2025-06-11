@@ -169,34 +169,14 @@ async def del_user(current_user: dict = Depends(get_current_user)):
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg":f"{e}", "status": False})
 
 
-@router.post("/log-out", summary="Logout current user")
-async def logout_user(current_user: dict = Depends(get_current_user)):
-    try:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"msg": "User logged out successfully", "status": True}
-        )
-    except Exception as e:
-        logger.error("Logout error: %s", e)
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"msg": f"{e}", "status": False}
-        )
-
-
 @router.post("/log-out", summary="Logout current user", tags=["users"])
 async def logout_user(current_user: dict = Depends(get_current_user)):
     try:
         jti = current_user.get("jti")
-        exp = current_user.get("exp")
+        print("jti: ", jti)
 
-        if not jti or not exp:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing token metadata")
-
-        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc)
-
-        query = "INSERT INTO jwt_blacklist (jti, expires_at) VALUES (%s, %s);"
-        cursor.execute(query,(jti, expires_at))
+        query = "INSERT INTO jwt_blacklist (jti) VALUES (%s);"
+        cursor.execute(query, (jti,))
         conn.commit()
 
         return JSONResponse(
