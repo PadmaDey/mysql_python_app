@@ -15,7 +15,18 @@ This project is a Python application that connects to a MySQL database. It provi
 
 2.  Install Docker and Docker Compose.
 
-3.  Create the environment files:
+3.  Install Make using Chocolatey (if you don't have it already):
+
+    ```powershell
+    Set-ExecutionPolicy Bypass -Scope Process -Force; `
+    [System.Net.ServicePointManager]::SecurityProtocol = `
+    [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
+    iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+    choco install make
+    ```
+
+4.  Create the environment files:
 
     ```bash
     cp env/db/.env.example env/db/.env
@@ -24,7 +35,7 @@ This project is a Python application that connects to a MySQL database. It provi
 
     Modify the environment files with your specific settings.
 
-4.  Start the application using Docker Compose:
+5.  Start the application using Docker Compose:
 
     ```bash
     docker-compose up -d
