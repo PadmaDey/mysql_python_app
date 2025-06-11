@@ -36,8 +36,4 @@ networks:
     driver: bridge
 
 
-# docker exec -it db mysql -u root -p
-# docker-compose down -v --rmi all --remove-orphans
-# docker system prune -af --volumes
-# docker-compose up --build
-# backend\app\db\init.sql
+

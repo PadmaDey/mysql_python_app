@@ -6,3 +6,4 @@ py_sql_conn.py
 
 docker.txt
 app/
+backend/app/utils/secret_key.py
