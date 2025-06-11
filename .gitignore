@@ -5,5 +5,5 @@ py_sql_conn.py
 **/__pycache__/
 
 docker.txt
-app/
+
 backend/app/utils/secret_key.py

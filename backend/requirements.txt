@@ -27,6 +27,7 @@ typing_extensions==4.13.2
 uvicorn==0.34.2
 wheel==0.45.1
 
+sqlalchemy
 mysql-connector-python
 
 
@@ -35,3 +36,4 @@ python-multipart
 python-jose[cryptography]
 passlib[bcrypt]
 pydantic[email]
+asyncmy sqlalchemy[asyncio]

@@ -48,7 +48,7 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         if not all ([email, jti, exp]):
             raise credentials_exception
 
-        query = "select * from jwt_blacklist where jti = %s"
+        query = "select * from JWTBlacklist where jti = %s"
         cursor.execute(query, (jti,))
         if cursor.fetchone():
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has been revoked")
