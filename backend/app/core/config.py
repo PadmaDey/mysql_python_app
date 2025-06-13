@@ -23,5 +23,19 @@ class Settings(BaseSettings):
     MYSQL_HOST: str = config("MYSQL_HOST", default="mysql")
     MYSQL_PORT: int = config("MYSQL_PORT", cast=int, default=3306)
 
+    @property
+    def ASYNC_DB_URL(self) -> str:
+        return (
+            f"mysql+asyncmy://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
+            f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
+        )
+
+    # @property
+    # def SYNC_DB_URL(self) -> str:
+    #     return (
+    #         f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
+    #         f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
+    #     )
+
 
 settings = Settings()

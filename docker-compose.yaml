@@ -8,7 +8,6 @@ services:
       - ./env/db/.env
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./backend/app/db:/docker-entrypoint-initdb.d
     networks:
       - my_app_net
     restart: unless-stopped

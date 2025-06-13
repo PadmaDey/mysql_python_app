@@ -1,11 +1,22 @@
 import uvicorn
 from fastapi import FastAPI
+from contextlib import asynccontextmanager
+
 from app.api import api_router
 from app.core.config import settings
 from app.services.logger import logger
+from app.db import initialize_db
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("App is starting... initializing database.")
+    await initialize_db()
+    logger.info("Database initialized")
+    yield
+    logger.info("App is shutting down...")
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.include_router(api_router)
 
 

@@ -25,3 +25,6 @@ extend_skip = ["env"]
 
 [tool.bandit]
 exclude_dirs = ["*/env/*"]
+
+[tool.poetry.dependencies]
+pymysql = "^1.1"

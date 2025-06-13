@@ -1,23 +1,33 @@
-from app.db.connection import cursor
-from fastapi import HTTPException, status
-from fastapi.responses import JSONResponse
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends, HTTPException, status
+
+from app.db.dependencies import get_db
+from app.models.user import User
 from app.services.logger import logger
-from app.utils.validation import serialize_row
 
-def get_user(email: str):
+async def get_user(email: str, db: AsyncSession = Depends(get_db)):
     try:
-        query = "SELECT * FROM users WHERE email = %s;"
-        cursor.execute(query, (email,))
-        raw_user = cursor.fetchone()
+        query = select(User).where(User.email == email)
+        result = await db.execute(query)
+        user = result.scalar_one_or_none()
 
-        if not raw_user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-
-        return serialize_row(raw_user)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="User not found"
+            )
+        return user
     
     except HTTPException:
         raise
 
     except Exception as e:
         logger.error("Error: %s", e)
-        return HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal Server Error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail="Internal Server Error"
+        )
+
+
+

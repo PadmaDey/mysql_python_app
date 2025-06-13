@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException, status, Path, Depends
+from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
-from datetime import datetime, timedelta, timezone
+from sqlalchemy import select, update, delete
+from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import timedelta
 
 from app.schemas import user as schemas
 from app.db.dependencies import get_db
@@ -9,183 +11,329 @@ from app.models.jti_blacklist import JTIBlacklist
 from app.services.logger import logger
 from app.core.auth.password import get_password_hash, verify_password
 from app.core.auth.jwt_handler import create_access_token, get_current_user
-from app.utils.validation import get_current_utc_time, serialize_row
+from app.utils.validation import get_current_utc_time
 
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
 
 @router.post("/signup", summary="Add a new user")
-async def signup_user(user: schemas.User):
+async def signup_user(user: schemas.User, db: AsyncSession = Depends(get_db)):
     try:
-        payload = user.model_dump()
-
-        payload["password"] = get_password_hash(payload.get("password"))
-
-        c_time = get_current_utc_time()
-        payload["created_at"] = c_time
-        payload["updated_at"] = c_time
-
-        cursor.execute(
-            "INSERT INTO users (name, email, phone_no, password_hash, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
-            (
-                payload.get("name"),
-                payload.get("email"),
-                payload.get("phone_no"),
-                payload.get("password"),
-                payload.get("created_at"),
-                payload.get("updated_at"),
-            ),
+        hashed_password = await get_password_hash(user.password)
+        new_user = User(
+            name=user.name,
+            email=user.email,
+            phone_no=user.phone_no,
+            password_hash=hashed_password,
         )
-        conn.commit()
 
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"msg": "User created successfully", "status": True})
+        try:
+            db.add(new_user)
+            await db.commit()
+            await db.refresh(new_user)
+
+            return JSONResponse(
+                status_code=status.HTTP_201_CREATED, 
+                content={
+                    "msg": "User created successfully", 
+                    "status": True
+                }
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT, 
+                detail="A user with this mail already exists."
+            )
+    
+    except HTTPException:
+        raise
+
     except Exception as e:
         logger.error("Error: %s", e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            content={
+                "msg": f"{e}", 
+                "status": False
+            }
+        )
 
 
 @router.post("/login", summary="User logging in")
-async def login_user(user: schemas.Login):
+async def login_user(user: schemas.Login, db: AsyncSession = Depends(get_db)):
     try:
-        query = "select * from users where email = %s;"
-        cursor.execute(query, (user.email,))
-        db_user = cursor.fetchone()
+        query = select(User).where(User.email == user.email)
+        result = await db.execute(query)
+        db_user = result.scalar_one_or_none()
 
         if not db_user:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-        
-        hashed_password = db_user[4] 
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="User not found"
+            ) 
 
-        if not verify_password(user.password, hashed_password):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password")
+        if not await verify_password(user.password, db_user.password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Incorrect password"
+            )
     
-        token = create_access_token({"email": user.email}, timedelta(minutes=15))
+        token = await create_access_token({"email": user.email}, timedelta(minutes=15))
 
-        return JSONResponse(status_code=status.HTTP_201_CREATED, content={"token": token, "msg": "User logged in successfully", "status": True})
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED, 
+            content={
+                "token": token, 
+                "msg": "User logged in successfully", 
+                "status": True
+            }
+        )
+
+    except HTTPException:
+        raise
+    
     except Exception as e:
         logger.error("Error: %s", e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            content={
+                "msg": f"{e}", 
+                "status": False
+            }
+        )
 
 
 @router.get("/", summary="Get all users")
-async def get_all_users(current_user: dict = Depends(get_current_user)):
+async def get_all_users(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
-        email = current_user.get("email")
+        email = current_user["email"]
         if not email:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user session")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid user session"
+            )
 
-        cursor.execute("select * from users;")
-        raw_users = cursor.fetchall()
+        query = select(User)
+        result = await db.execute(query)
+        users = result.scalars().all()
 
-        if not raw_users:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-        
-        users = [serialize_row(row) for row in raw_users]
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": users})
+        if not users:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="No users found"
+            )
+
+        users_data =[{
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "phone_no": u.phone_no,
+            "created_at": u.created_at.isoformat() if u.created_at else None,
+            "updated_at": u.updated_at.isoformat() if u.updated_at else None
+        } for u in users]
+
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, 
+            content={
+                "status": True, 
+                "data": users_data
+            }
+        )
+    
+    except HTTPException:
+        raise
     
     except Exception as e:
         logger.error("Error: %s", e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg": f"{e}", "status": False})
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            content={
+                "msg": f"{e}", 
+                "status": False
+            }
+        )
     
 
 @router.get("/me", summary="Get current logged-in user")
-async def get_current_user_data(current_user: dict = Depends(get_current_user)):
+async def get_current_user_data(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
-        email = current_user.get("email")
+        email = current_user["email"]
         if not email:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user session")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid user mail"
+            )
+        
+        query = select(User).where(User.email == email)
+        result = await db.execute(query)
+        user = result.scalar_one_or_none()
 
-        query = "SELECT * FROM users WHERE email = %s;"
-        cursor.execute(query, (email,))
-        raw_users = cursor.fetchone()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="User not found"
+            )
 
-        if not raw_users:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        users_data ={
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "phone_no": user.phone_no,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "updated_at": user.updated_at.isoformat() if user.updated_at else None
+        }
 
-        user = serialize_row(raw_users)
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"status": True, "data": user})
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, 
+            content={
+                "status": True, 
+                "data": users_data
+            }
+        )
 
     except HTTPException:
         raise
 
     except Exception as e:
         logger.error("Error fetching current user: %s", e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"status": False, "msg": str(e)})
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            content={
+                "msg": str(e),
+                "status": False
+            }
+        )
 
 
 @router.put("/update-data", summary="update existing data")
-async def update_data(user: schemas.Update_user, current_user: dict = Depends(get_current_user)):
+async def update_data(update_user: schemas.Update_user, current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
-        email = current_user.get("email")
+        email = current_user["email"]
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid user mail"
+            )
+        
+        query = select(User).where(User.email == email)
+        result = await db.execute(query)
+        user = result.scalar_one_or_none()
 
-        cursor.execute("select * from users where email = %s", (email,))
-        if cursor.fetchone() is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email does not exist")
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="User not found"
+            )
+        
+        update_fields=dict()
 
-        update_fields=[]
-        values=[]
+        if update_user.name:
+            update_fields["name"] = update_user.name
 
-        if user.name is not None:
-            update_fields.append("name = %s")
-            values.append(user.name)
-
-        if user.phone_no is not None:
-            update_fields.append("phone_no = %s")
-            values.append(user.phone_no)
+        if update_user.phone_no:
+            update_fields["phone_no"] = update_user.phone_no
 
         if not update_fields:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provided fields are not valid")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail="Provided fields are not valid"
+            )
 
-        update_fields.append("updated_at = %s")
-        values.append(get_current_utc_time())
+        update_fields["updated_at"] = await get_current_utc_time()
 
-        query = f"update users set {', '.join(update_fields)} where email = %s;"
-        values.append(email)
-        cursor.execute(query, tuple(values))
-        conn.commit()
+        query = update(User).where(User.email == user.email).values(**update_fields)
+        result = await db.execute(query)
+        await db.commit()
 
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"msg": "User data updated successfully", "status": True})
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, 
+            content={
+                "msg": "User data updated successfully", 
+                "status": True
+            }
+        )
+    
+    except HTTPException:
+        raise
     
     except Exception as e:
         logger.error("Error: %s", e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg":f"{e}", "status": False})
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            content={
+                "msg":f"{e}", 
+                "status": False
+            }
+        )
 
 
 
 @router.delete("/delete-data", summary="Delete a user data")
-async def del_user(current_user: dict = Depends(get_current_user)):
+async def del_user(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
-        email = current_user.get("email")
+        email = current_user["email"]
+        if not email:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, 
+                detail="Invalid user mail"
+            )
 
-        cursor.execute("select * from users where email = %s", (email,))
-        if cursor.fetchone() is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User with this email does not exist")
+        query = select(User).where(User.email == email)
+        result = await db.execute(query)
+        user = result.scalar_one_or_none()
 
-        query = "delete from users where email= %s;"
-        cursor.execute(query, (email,))
-        conn.commit()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="User not found"
+            )
+
+        query = delete(User).where(User.email == email)
+        result = await db.execute(query)
+        await db.commit()
         
-        return JSONResponse(status_code=status.HTTP_200_OK, content={"msg": "User deleted successfully", "status": True})
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, 
+            content={
+                "msg": "User deleted successfully", 
+                "status": True
+            }
+        )
+    except HTTPException:
+        raise
     
     except Exception as e:
         logger.error("Error: %s", e)
-        return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content={"msg":f"{e}", "status": False})
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            content={
+                "msg":f"{e}", 
+                "status": False
+            }
+        )
 
 
-@router.post("/log-out", summary="Logout current user", tags=["users"])
-async def logout_user(current_user: dict = Depends(get_current_user)):
+@router.post("/log-out", summary="Logout current user")
+async def logout_user(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
-        jti = current_user.get("jti")
-        print("jti: ", jti)
+        jti = current_user.get("jti") 
+        if not jti:
+            raise HTTPException(
+                status_code=400, 
+                detail="JTI not found in token"
+            )
 
-        query = "INSERT INTO JWTBlacklist (jti) VALUES (%s);"
-        cursor.execute(query, (jti,))
-        conn.commit()
+        token_blacklist = JTIBlacklist(jti=jti)
+        db.add(token_blacklist)
+        await db.commit()
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"msg": "User logged out successfully", "status": True}
+            content={
+                "msg": "User logged out successfully", 
+                "status": True
+            }
         )
 
     except HTTPException:
@@ -195,6 +343,9 @@ async def logout_user(current_user: dict = Depends(get_current_user)):
         logger.error("Logout error: %s", e)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"msg": f"An unexpected error occurred: {e}", "status": False}
+            content={
+                "msg": f"An unexpected error occurred: {e}", 
+                "status": False
+            }
         )
 
