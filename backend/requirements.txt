@@ -38,3 +38,4 @@ passlib[bcrypt]
 pydantic[email]
 asyncmy 
 sqlalchemy[asyncio]
+alembic
