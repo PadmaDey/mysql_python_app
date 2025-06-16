@@ -1,7 +1,6 @@
 from pydantic_settings import BaseSettings
 from starlette.config import Config
 
-# config = Config("app/.env")
 config = Config()
 
 
@@ -29,13 +28,6 @@ class Settings(BaseSettings):
             f"mysql+asyncmy://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
             f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
         )
-
-    # @property
-    # def SYNC_DB_URL(self) -> str:
-    #     return (
-    #         f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
-    #         f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
-    #     )
 
 
 settings = Settings()

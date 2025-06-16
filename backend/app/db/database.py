@@ -6,8 +6,6 @@ from app.core.config import settings
 
 engine = create_async_engine(settings.ASYNC_DB_URL, pool_pre_ping=True)
 
-# sync_engine = create_engine(settings.SYNC_DB_URL)
-
 AsyncSessionLocal= async_sessionmaker(
     autocommit=False, 
     autoflush=False, 
