@@ -82,7 +82,7 @@ async def login_user(user: schemas.Login, db: AsyncSession = Depends(get_db)):
         token = await create_access_token({"email": user.email}, timedelta(minutes=15))
 
         return JSONResponse(
-            status_code=status.HTTP_201_CREATED, 
+            status_code=status.HTTP_200_OK, 
             content={
                 "token": token, 
                 "msg": "User logged in successfully", 
