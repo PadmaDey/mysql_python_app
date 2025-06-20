@@ -38,4 +38,7 @@ passlib[bcrypt]
 pydantic[email]
 asyncmy 
 sqlalchemy[asyncio]
-alembic
+
+pytest 
+requests-mock
+# alembic
