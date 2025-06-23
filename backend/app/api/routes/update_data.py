@@ -1,16 +1,13 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
-from sqlalchemy import select, update, delete
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import timedelta
 
 from app.schemas import user as schemas
 from app.db.dependencies import get_db
 from app.models.user import User
-from app.models.jti_blacklist import JTIBlacklist
 from app.services.logger import logger
-from app.core.auth.password import get_password_hash, verify_password
-from app.core.auth.jwt_handler import create_access_token, get_current_user
+from app.core.auth.jwt_handler import get_current_user
 from app.utils.validation import get_current_utc_time
 
 
