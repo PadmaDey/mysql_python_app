@@ -46,3 +46,69 @@ volumes:
 networks:
   my_app_net:
     driver: bridge
+
+
+
+# version: "3.8"
+
+# services:
+#   mysql:
+#     image: mysql:8.4
+#     container_name: db
+#     ports:
+#       - "0.0.0.0:3306:3306"
+#     env_file:
+#       - ./env/db/.env
+#     volumes:
+#       - mysql_data:/var/lib/mysql
+#     networks:
+#       - my_app_net
+#     restart: unless-stopped
+#     healthcheck:
+#       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+#       interval: 10s
+#       timeout: 5s
+#       retries: 5
+
+#   api:
+#     build:
+#       context: backend
+#       dockerfile: Dockerfile
+#     container_name: api
+#     depends_on:
+#       mysql:
+#         condition: service_healthy
+#     restart: on-failure
+#     ports:
+#       - "8080:8080"
+#     env_file:
+#       - ./env/backend/.env
+#     networks:
+#       - my_app_net
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:8080/docs"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+
+#   test:
+#     build:
+#       context: backend
+#       dockerfile: Dockerfile
+#     container_name: test-runner
+#     command: ["pytest", "-s", "./backend/app/mock_test"]
+#     depends_on:
+#       mysql:
+#         condition: service_healthy
+#     env_file:
+#       - ./env/backend/.env
+#     networks:
+#       - my_app_net
+#     profiles: ["test"]  # Only runs if explicitly specified (optional)
+
+# volumes:
+#   mysql_data:
+
+# networks:
+#   my_app_net:
+#     driver: bridge

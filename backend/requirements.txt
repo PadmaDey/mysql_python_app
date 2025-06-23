@@ -41,4 +41,7 @@ sqlalchemy[asyncio]
 
 pytest 
 requests-mock
+pytest-mock 
+pytest-asyncio
+httpx
 # alembic

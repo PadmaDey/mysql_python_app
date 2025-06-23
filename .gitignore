@@ -3,6 +3,7 @@ mysql_conn_venv/
 .env
 py_sql_conn.py
 **/__pycache__/
+.pytest_cache/
 
 docker.txt
 

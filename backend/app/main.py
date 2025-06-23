@@ -20,10 +20,10 @@ app = FastAPI(lifespan=lifespan)
 app.include_router(api_router)
 
 
-@app.get("/")
-def read_root():
-    logger.info("route is working fine!")
-    return {"msg": "ok"}
+@app.get("/api/healthcheck")
+async def read_root():
+    logger.info("API Route is working fine!")
+    return {"msg": "The API is LIVE!!"}
 
 
 
@@ -34,6 +34,3 @@ if __name__ == "__main__":
         port=settings.PORT, 
         debug=settings.DEBUG
         )
-
-
-
