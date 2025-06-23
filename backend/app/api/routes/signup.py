@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.schemas import user as schemas
 from app.db.dependencies import get_db
@@ -23,7 +24,17 @@ async def signup_user(user: schemas.User, db: AsyncSession = Depends(get_db)):
             password_hash=hashed_password,
         )
 
-        try:
+        query = select(User).where(User.email==user.email)
+        result = await db.execute(query)
+        db_user = result.scalar_one_or_none()
+
+        if db_user:
+            raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, 
+            detail="A user with this mail already exists."
+        )
+
+        if not db_user:
             db.add(new_user)
             await db.commit()
             await db.refresh(new_user)
@@ -35,12 +46,7 @@ async def signup_user(user: schemas.User, db: AsyncSession = Depends(get_db)):
                     "status": True
                 }
             )
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT, 
-                detail="A user with this mail already exists."
-            )
-    
+            
     except HTTPException:
         raise
 
@@ -49,7 +55,7 @@ async def signup_user(user: schemas.User, db: AsyncSession = Depends(get_db)):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             content={
-                "msg": f"{e}", 
+                "msg": f"Internal Server Error", 
                 "status": False
             }
         )
