@@ -1,5 +1,5 @@
 import pytest
-from backend.tests.conftest import register_test_email
+from mock_test.conftest import register_test_email
 
 
 # Successful login
