@@ -6,6 +6,7 @@ from typing import Optional
 
 class User(Base):
     __tablename__="users"
+    __table_args__ = {'extend_existing': True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
