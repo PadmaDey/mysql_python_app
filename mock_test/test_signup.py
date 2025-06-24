@@ -1,5 +1,5 @@
 import pytest
-from conftest import register_test_email
+from mock_test.conftest import register_test_email
 
 
 # Valid signup
