@@ -1,11 +1,11 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator
-
+from pydantic import BaseModel, EmailStr, field_validator, StrictInt
+import re
 
 class User(BaseModel):
     name: str
     email: EmailStr
-    phone_no: Optional[int] = None
+    phone_no: Optional[StrictInt] = None
     password: str
 
     @field_validator('name', mode='after')
@@ -28,12 +28,25 @@ class User(BaseModel):
                 return value
             raise ValueError("Phone number must be a 10-digit integer")
         return value
+    
+    @field_validator('password', mode='after')
+    @classmethod
+    def validate_password(cls, value):
+        password_pattern = re.compile(
+            r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!#%*?&]{8,}$"
+        )
+        if not password_pattern.match(value):
+            raise ValueError(
+                "Password must be at least 8 characters long, include an uppercase letter, "
+                "a lowercase letter, a number, and a special character."
+            )
+        return value
 
 
 
 class Update_user(BaseModel):
     name: Optional[str] = None
-    phone_no: Optional[int] = None
+    phone_no: Optional[StrictInt] = None
 
     @field_validator('name', mode='after')
     @classmethod
@@ -56,3 +69,21 @@ class Update_user(BaseModel):
 class Login(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator('email')
+    @classmethod
+    def transform_email(cls, value):
+        return value.lower()
+    
+    @field_validator('password', mode='after')
+    @classmethod
+    def validate_password(cls, value):
+        password_pattern = re.compile(
+            r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!#%*?&]{8,}$"
+        )
+        if not password_pattern.match(value):
+            raise ValueError(
+                "Password must be at least 8 characters long, include an uppercase letter, "
+                "a lowercase letter, a number, and a special character."
+            )
+        return value
