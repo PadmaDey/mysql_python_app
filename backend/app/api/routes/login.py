@@ -14,7 +14,7 @@ from app.core.auth.jwt_handler import create_access_token
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-@router.post("/login", summary="User logging in")
+@router.post("/login", status_code=status.HTTP_200_OK, summary="User logging in")
 async def login_user(user: schemas.Login, db: AsyncSession = Depends(get_db)):
     try:
         query = select(User).where(User.email == user.email)
