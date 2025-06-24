@@ -13,7 +13,7 @@ from app.core.auth.password import get_password_hash
 router = APIRouter(prefix="/api/users", tags=["users"])
 
 
-@router.post("/signup", summary="Add a new user")
+@router.post("/signup", status_code=status.HTTP_201_CREATED, summary="Add a new user",)
 async def signup_user(user: schemas.User, db: AsyncSession = Depends(get_db)):
     try:
         hashed_password = await get_password_hash(user.password)
