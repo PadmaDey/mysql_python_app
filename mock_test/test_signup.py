@@ -69,9 +69,6 @@ async def test_signup_missing_fields(test_client, cleanup_user):
         "password": "Test@123"
     }
 
-    # response = await test_client.post("/api/users/signup", json=payload)
-    # assert response.status_code == 422
-    # assert "detail" in response.json()
     assert response.status_code == 201
     assert response.json() == {
         "msg": "User created successfully",
@@ -79,7 +76,7 @@ async def test_signup_missing_fields(test_client, cleanup_user):
     }
 
 @pytest.mark.asyncio
-async def test_signup_missing_fields(test_client, cleanup_user):
+async def test_signup_missing_fields(test_client):
     payload = {
         "name": "Test User1",
         "email": "testuser@example.com",
@@ -92,7 +89,7 @@ async def test_signup_missing_fields(test_client, cleanup_user):
 
 # Invalid email
 @pytest.mark.asyncio
-async def test_signup_invalid_email_format(test_client, cleanup_user):
+async def test_signup_invalid_email_format(test_client):
     payload = {
         "name": "Test User1",
         "email": "testuserexample.com",
@@ -106,7 +103,7 @@ async def test_signup_invalid_email_format(test_client, cleanup_user):
 
 # Weak password
 @pytest.mark.asyncio
-async def test_signup_weak_password(test_client, cleanup_user):
+async def test_signup_weak_password(test_client):
     payload = {
         "name": "Test User1",
         "email": "testuser@example.com",
@@ -121,7 +118,7 @@ async def test_signup_weak_password(test_client, cleanup_user):
 
 # Invalid contact number
 @pytest.mark.asyncio
-async def test_signup_invalid_phone_number(test_client, cleanup_user):
+async def test_signup_invalid_phone_number(test_client):
     payload = {
         "name": "Test User1",
         "email": "testuser@example.com",
@@ -133,7 +130,7 @@ async def test_signup_invalid_phone_number(test_client, cleanup_user):
     assert "detail" in response.json()
 
 @pytest.mark.asyncio
-async def test_signup_invalid_phone_number(test_client, cleanup_user):
+async def test_signup_invalid_phone_number(test_client):
     payload = {
         "name": "Test User1",
         "email": "testuser@example.com",
