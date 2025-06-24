@@ -5,6 +5,7 @@ from app.db.database import Base
 
 class JTIBlacklist(Base):
     __tablename__="jti_blacklist"
+    __table_args__ = {'extend_existing': True}
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     jti: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
