@@ -114,7 +114,11 @@ async def test_signup_weak_password(test_client):
     response = await test_client.post("/api/users/signup", json=payload)
     assert response.status_code == 422
     assert "detail" in response.json()
-    assert any("Password must be at least 8 characters" in err["msg"] for err in response.json()["detail"])
+    assert any(
+        "Password must be at least 8 characters long, include an uppercase letter, "
+        "a lowercase letter, a number, and a special character." in err["msg"] 
+        for err in response.json()["detail"]
+    )
 
 # Invalid contact number
 @pytest.mark.asyncio
