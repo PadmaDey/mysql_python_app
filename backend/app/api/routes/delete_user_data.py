@@ -11,7 +11,7 @@ from app.core.auth.jwt_handler import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-@router.delete("/delete-data", summary="Delete a user data")
+@router.delete("/delete-data", status_code=status.HTTP_200_OK, summary="Delete a user data")
 async def del_user(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
         email = current_user["email"]
