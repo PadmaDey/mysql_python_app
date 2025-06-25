@@ -11,7 +11,7 @@ async def create_user_and_get_token(test_client, email="testuser@example.com", p
         "password": password
     }
 
-    register_test_email(email)
+    await register_test_email(email)
 
     await test_client.post("/api/users/signup", json=signup_payload)
 
