@@ -13,7 +13,7 @@ from app.utils.validation import get_current_utc_time
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-@router.put("/update-data", summary="update existing data")
+@router.put("/update-data", status_code=status.HTTP_200_OK, summary="update existing data")
 async def update_data(update_user: schemas.Update_user, current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
         email = current_user["email"]
