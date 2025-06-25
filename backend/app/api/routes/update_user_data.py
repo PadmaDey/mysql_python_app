@@ -17,11 +17,6 @@ router = APIRouter(prefix="/api/users", tags=["users"])
 async def update_data(update_user: schemas.Update_user, current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
         email = current_user["email"]
-        if not email:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, 
-                detail="Invalid user email"
-            )
         
         query = select(User).where(User.email == email)
         result = await db.execute(query)
