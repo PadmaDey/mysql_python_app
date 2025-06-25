@@ -20,6 +20,18 @@ async def logout_user(current_user: dict = Depends(get_current_user), db: AsyncS
                 detail="JTI not found in token"
             )
 
+        # Check for duplicate JTI
+        query = select(JTIBlacklist).where(JTIBlacklist.jti == jti)
+        result = await db.execute(query)
+        existing_jti = result.scalar_one_or_none()
+
+        if existing_jti:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Duplicate JTI: Token already blacklisted"
+            )
+
+        # Add the JTI to the blacklist
         token_blacklist = JTIBlacklist(jti=jti)
         db.add(token_blacklist)
         await db.commit()
