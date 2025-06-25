@@ -11,7 +11,7 @@ from app.core.auth.jwt_handler import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-@router.get("/", summary="Get all users")
+@router.get("/", status_code=status.HTTP_200_OK, summary="Get all users")
 async def get_all_users(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
         email = current_user["email"]
