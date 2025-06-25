@@ -12,7 +12,7 @@ async def test_signup_success(test_client):
         "password": "Test@123"
     }
 
-    register_test_email(payload["email"])
+    await register_test_email(payload["email"])
 
     response = await test_client.post("/api/users/signup", json=payload)
 
@@ -33,7 +33,7 @@ async def test_signup_duplicate_email(test_client):
         "password": "Test@123"
     }
 
-    register_test_email(payload["email"])
+    await register_test_email(payload["email"])
 
     await test_client.post("/api/users/signup", json=payload)
     response = await test_client.post("/api/users/signup", json=payload)
@@ -81,7 +81,7 @@ async def test_signup_missing_phone_no(test_client):
         "password": "Test@123"
     }
 
-    register_test_email(payload["email"])
+    await register_test_email(payload["email"])
 
     response = await test_client.post("/api/users/signup", json=payload)
 
