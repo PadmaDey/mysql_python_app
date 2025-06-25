@@ -12,7 +12,7 @@ async def test_login_success(test_client):
         "password": "Test@123"
     }
 
-    register_test_email(signup_payload["email"])
+    await register_test_email(signup_payload["email"])
 
     await test_client.post("/api/users/signup", json=signup_payload)
 
@@ -54,7 +54,7 @@ async def test_login_incorrect_password(test_client):
         "password": "Test@123"
     }
 
-    register_test_email(signup_payload["email"])
+    await register_test_email(signup_payload["email"])
 
     await test_client.post("/api/users/signup", json=signup_payload)
 
