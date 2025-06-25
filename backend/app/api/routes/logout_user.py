@@ -10,7 +10,7 @@ from app.core.auth.jwt_handler import get_current_user
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
-@router.post("/log-out", summary="Logout current user")
+@router.post("/log-out", status_code=status.HTTP_200_OK, summary="Logout current user")
 async def logout_user(current_user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     try:
         jti = current_user.get("jti") 
