@@ -34,6 +34,11 @@ async def decode_access_token(token: str):
     except JWTError:
         return None
 
+async def is_token_blacklisted(jti: str, db: AsyncSession) -> bool:
+    query = select(JTIBlacklist).where(JTIBlacklist.jti == jti)
+    result = await db.execute(query)
+    return result.scalar_one_or_none() is not None
+
 
 async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -54,12 +59,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
             raise credentials_exception
 
         
-        query = select(JTIBlacklist).where(JTIBlacklist.jti == jti)
-        result = await db.execute(query)
-        blacklisted_token = result.scalar_one_or_none()
-        if blacklisted_token:
+        if await is_token_blacklisted(jti, db):
+            logger.warning(f"Revoked token attempt: jti={jti}, email={email}")
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, 
+                status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has been revoked"
             )
 
