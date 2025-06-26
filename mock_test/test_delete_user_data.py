@@ -6,7 +6,7 @@ from mock_test.utils import create_user_and_get_token
 # Success: Delete user data
 @pytest.mark.asyncio
 async def test_delete_user(test_client):
-    token = await create_user_and_get_token(test_client)
+    token = await create_user_and_get_token(test_client, email="delete_success@example.com",)
     headers = {"Authorization": f"Bearer {token}"}
 
     response = await test_client.delete("/api/users/delete-data", headers=headers)
