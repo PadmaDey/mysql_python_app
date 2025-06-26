@@ -6,7 +6,7 @@ from mock_test.utils import create_user_and_get_token
 # Success: Update user name and phone number
 @pytest.mark.asyncio
 async def test_update_user_success(test_client):
-    token = await create_user_and_get_token(test_client)
+    token = await create_user_and_get_token(test_client, email="update_success@example.com",)
     headers = {"Authorization": f"Bearer {token}"}
 
     update_payload = {
@@ -59,7 +59,7 @@ async def test_update_user_invalid_token(test_client):
 # Bad Request: No fields provided
 @pytest.mark.asyncio
 async def test_update_user_no_fields(test_client):
-    token = await create_user_and_get_token(test_client)
+    token = await create_user_and_get_token(test_client, email="nofields@example.com")
     headers = {"Authorization": f"Bearer {token}"}
 
     update_payload = {}
