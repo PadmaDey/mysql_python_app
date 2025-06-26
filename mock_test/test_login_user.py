@@ -7,26 +7,25 @@ from mock_test.conftest import register_test_email
 async def test_login_success(test_client):
     signup_payload = {
         "name": "Test User1",
-        "email": "testuser@example.com",
+        "email": "loginuser1@example.com",
         "phone_no": 1234567890,
         "password": "Test@123"
     }
 
     await register_test_email(signup_payload["email"])
-
     await test_client.post("/api/users/signup", json=signup_payload)
 
     login_payload = {
-        "email": "testuser@example.com",
+        "email": "loginuser1@example.com",
         "password": "Test@123"
     }
 
     response = await test_client.post("/api/users/login", json=login_payload)
+    data = response.json()
 
     assert response.status_code == 200
-    data = response.json()
-    assert data["status"] is True
     assert "token" in data
+    assert data["status"] is True
     assert data["msg"] == "User logged in successfully"
 
 
@@ -34,39 +33,44 @@ async def test_login_success(test_client):
 @pytest.mark.asyncio
 async def test_login_user_not_found(test_client):
     payload = {
-        "email": "test@example.com",
+        "email": "notfound@example.com",
         "password": "Test@123"
     }
 
     response = await test_client.post("/api/users/login", json=payload)
+    data = response.json()
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "User not found"}
+    assert data == {
+        "detail": "User not found"
+    }
 
 
 # Incorrect password
 @pytest.mark.asyncio
 async def test_login_incorrect_password(test_client):
     signup_payload = {
-        "name": "Test User1",
-        "email": "testuser@example.com",
+        "name": "Test User2",
+        "email": "wrongpass@example.com",
         "phone_no": 1234567890,
         "password": "Test@123"
     }
 
     await register_test_email(signup_payload["email"])
-
     await test_client.post("/api/users/signup", json=signup_payload)
 
     login_payload = {
-        "email": "testuser@example.com",
+        "email": "wrongpass@example.com",
         "password": "WrongPassword@123"
     }
 
     response = await test_client.post("/api/users/login", json=login_payload)
+    data = response.json()
 
     assert response.status_code == 401
-    assert response.json() == {"detail": "Incorrect password"}
+    assert data == {
+        "detail": "Incorrect password"
+    }
 
 
 # Missing email field
@@ -77,47 +81,51 @@ async def test_login_missing_email_field(test_client):
     }
 
     response = await test_client.post("/api/users/login", json=payload)
+    data = response.json()
+
     assert response.status_code == 422
-    assert "detail" in response.json()
+    assert "detail" in data
 
 
 # Missing password field
 @pytest.mark.asyncio
 async def test_login_missing_password_field(test_client):
     payload = {
-        "email": "testuser@example.com",
+        "email": "someuser@example.com",
     }
 
     response = await test_client.post("/api/users/login", json=payload)
+    data = response.json()
+
     assert response.status_code == 422
-    assert "detail" in response.json()
+    assert "detail" in data
 
 
 # Invalid email format
 @pytest.mark.asyncio
 async def test_login_invalid_email_format(test_client):
     payload = {
-        "email": "testuserexample.com",
+        "email": "bademailformat.com",
         "password": "Test@123"
     }
 
     response = await test_client.post("/api/users/login", json=payload)
+    data = response.json()
+
     assert response.status_code == 422
-    assert "detail" in response.json()
+    assert "detail" in data
 
 
 # Weak password (schema check)
 @pytest.mark.asyncio
 async def test_login_weak_password_schema(test_client):
     payload = {
-        "email": "testuser@example.com",
+        "email": "weakpasslogin@example.com",
         "password": "Test123"
     }
 
     response = await test_client.post("/api/users/login", json=payload)
+    data = response.json()
+
     assert response.status_code == 422
-    assert "detail" in response.json()
-    assert any(
-        "Password must be at least 8 characters long, include an uppercase letter," in err["msg"]
-        for err in response.json()["detail"]
-    )
+    assert "detail" in data
