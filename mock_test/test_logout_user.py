@@ -105,14 +105,14 @@ async def test_logout_user_duplicate_jti(test_client):
 
     # First logout - should succeed
     response1 = await test_client.post("/api/users/log-out", headers=headers)
-    data = response.json()
+    data = response1.json()
 
     assert response1.status_code == 200
     assert data["msg"] == "User logged out successfully"
 
     # Second logout with same token - should be rejected due to revoked token
     response2 = await test_client.post("/api/users/log-out", headers=headers)
-    data = response.json()
+    data = response2.json()
 
     assert response2.status_code == 401
     assert data["detail"] == "Token has been revoked"
