@@ -93,6 +93,7 @@ async def test_update_user_not_found(test_client, db_session, email="deleteduser
     assert response.status_code == 404
     assert data["detail"] == "User not found"
 
+
 # Tampared Token: Missing email field
 @pytest.mark.asyncio
 async def test_update_user_token_missing_email(test_client, monkeypatch):
