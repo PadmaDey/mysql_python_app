@@ -13,7 +13,7 @@ def connect_to_db():
             password=settings.MYSQL_PASSWORD,
             database=settings.MYSQL_DATABASE,
             auth_plugin='mysql_native_password'
-            )
+        )
 
         if conn.is_connected():
             logger.info("Successfully connected to MySQL")
@@ -30,7 +30,3 @@ def get_cursor(conn: MySQLConnection):
     except Exception as e:
         logger.exception("Failed to get cursor: %s", e)
         raise
-
-
-conn = connect_to_db()
-cursor = get_cursor(conn)
