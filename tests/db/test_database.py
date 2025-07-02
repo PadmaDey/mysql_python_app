@@ -16,4 +16,4 @@ class TestDatabaseSetup(unittest.IsolatedAsyncioTestCase):
     async def test_async_session_local_returns_session(self):
         async with AsyncSessionLocal() as session:
             self.assertIsInstance(session, AsyncSession)
-            self.assertFalse(session.in_transaction())  # Should not be in tx until commit/rollback
+            self.assertFalse(session.in_transaction())  
