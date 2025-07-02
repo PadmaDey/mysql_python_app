@@ -36,6 +36,3 @@ class TestSettings(unittest.TestCase):
         self.assertTrue(settings.ASYNC_DB_URL.startswith("mysql+asyncmy://"))
         self.assertIn("@mysql:", settings.ASYNC_DB_URL)
 
-
-if __name__ == "__main__":
-    unittest.main()
