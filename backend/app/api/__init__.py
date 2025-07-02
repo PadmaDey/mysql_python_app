@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes import signup_user, login_user, view_all_users, view_current_user, update_user_data, delete_user_data, logout_user
+from app.api.endpoints import signup_user, login_user, view_all_users, view_current_user, update_user_data, delete_user_data, logout_user
 
 api_router = APIRouter()
 
