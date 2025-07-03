@@ -97,7 +97,7 @@ async def test_update_user_not_found(test_client, db_session, email="deleteduser
 # Tampared Token: Missing email field
 @pytest.mark.asyncio
 async def test_update_user_token_missing_email(test_client, monkeypatch):
-    from backend.app.core.auth.jwt_handler import SECRET_KEY, ALGORITHM
+    from backend.app.auth.jwt_handler import SECRET_KEY, ALGORITHM
     from jose import jwt
 
     async def fake_token(update_payload, expires_delta):
@@ -105,7 +105,7 @@ async def test_update_user_token_missing_email(test_client, monkeypatch):
         return jwt.encode(update_payload, SECRET_KEY, algorithm=ALGORITHM)
 
     monkeypatch.setattr(
-        "backend.app.core.auth.jwt_handler.create_access_token", 
+        "backend.app.auth.jwt_handler.create_access_token", 
         fake_token,
     )
 

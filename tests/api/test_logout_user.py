@@ -44,7 +44,7 @@ async def test_logout_user_invalid_token(test_client):
 # Bad Request: Missing JTI in token
 @pytest.mark.asyncio
 async def test_logout_user_missing_jti(test_client, monkeypatch):
-    from backend.app.core.auth.jwt_handler import SECRET_KEY, ALGORITHM
+    from backend.app.auth.jwt_handler import SECRET_KEY, ALGORITHM
     from jose import jwt
 
     async def fake_token(payload, expires_delta):
@@ -52,7 +52,7 @@ async def test_logout_user_missing_jti(test_client, monkeypatch):
         return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
         monkeypatch.setattr(
-            "backend.app.core.auth.jwt_handler.create_access_token", 
+            "backend.app.auth.jwt_handler.create_access_token", 
             fake_token,
         )
 
@@ -75,7 +75,7 @@ async def test_logout_user_missing_jti(test_client, monkeypatch):
 async def test_revoked_token_rejected(test_client, db_session):
     token = await create_user_and_get_token(test_client, email="revoked@example.com",)
 
-    from backend.app.core.auth.jwt_handler import decode_access_token
+    from backend.app.auth.jwt_handler import decode_access_token
     from backend.app.models.jti_blacklist import JTIBlacklist
 
     payload = await decode_access_token(token)

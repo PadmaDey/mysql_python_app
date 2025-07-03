@@ -63,7 +63,7 @@ async def test_get_current_user_not_found_in_db(test_client, db_session):
 # Tampered token: Missing email claim
 @pytest.mark.asyncio
 async def test_get_current_user_token_missing_email(test_client, monkeypatch):
-    from backend.app.core.auth.jwt_handler import SECRET_KEY, ALGORITHM
+    from backend.app.auth.jwt_handler import SECRET_KEY, ALGORITHM
     from jose import jwt
 
     async def fake_token(payload, expires_delta):
@@ -71,7 +71,7 @@ async def test_get_current_user_token_missing_email(test_client, monkeypatch):
         return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
     monkeypatch.setattr(
-        "backend.app.core.auth.jwt_handler.create_access_token", 
+        "backend.app.auth.jwt_handler.create_access_token", 
         fake_token,
     )
 

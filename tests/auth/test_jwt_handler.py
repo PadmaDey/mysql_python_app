@@ -6,7 +6,7 @@ import os
 
 from sqlalchemy import select, delete
 
-from backend.app.core.auth import jwt_handler
+from backend.app.auth import jwt_handler
 from backend.app.utils.validation import get_current_utc_time
 from backend.app.models.jti_blacklist import JTIBlacklist
 from backend.app.db.database import AsyncSessionLocal

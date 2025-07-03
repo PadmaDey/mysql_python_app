@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.core.auth.user import get_user
+from backend.app.auth.user import get_user
 from backend.app.models.user import User
 
 
@@ -32,7 +32,7 @@ class TestGetUser(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(context.exception.status_code, status.HTTP_404_NOT_FOUND)
         self.assertEqual(context.exception.detail, "User not found")
 
-    @patch("backend.app.core.auth.user.logger")
+    @patch("backend.app.auth.user.logger")
     async def test_db_error_raises_500(self, mock_logger):
         mock_db = AsyncMock(spec=AsyncSession)
         mock_db.execute.side_effect = Exception("DB Error")

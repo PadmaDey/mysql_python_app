@@ -8,8 +8,8 @@ from app.schemas import user as schemas
 from app.db.dependencies import get_db
 from app.models.user import User
 from app.services.logger import logger
-from app.core.auth.password import verify_password
-from app.core.auth.jwt_handler import create_access_token
+from app.auth.password import verify_password
+from app.auth.jwt_handler import create_access_token
 
 
 router = APIRouter(prefix="/api/users", tags=["users"])

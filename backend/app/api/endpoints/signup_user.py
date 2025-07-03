@@ -7,7 +7,7 @@ from app.schemas import user as schemas
 from app.db.dependencies import get_db
 from app.models.user import User
 from app.services.logger import logger
-from app.core.auth.password import get_password_hash
+from app.auth.password import get_password_hash
 
 
 router = APIRouter(prefix="/api/users", tags=["users"])

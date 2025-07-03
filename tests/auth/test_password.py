@@ -1,5 +1,5 @@
 import unittest
-from backend.app.core.auth import password
+from backend.app.auth import password
 
 
 class TestPasswordUtils(unittest.IsolatedAsyncioTestCase):

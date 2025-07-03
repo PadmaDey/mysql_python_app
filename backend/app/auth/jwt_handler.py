@@ -10,7 +10,7 @@ import uuid
 
 from app.models.jti_blacklist import JTIBlacklist
 from app.utils.validation import get_current_utc_time
-from app.core.auth.user import get_user
+from app.auth.user import get_user
 from app.db.dependencies import get_db
 from app.services.logger import logger
 
