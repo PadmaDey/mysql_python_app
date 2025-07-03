@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from backend.app.config import Settings
+from backend.app.core.config import Settings
 
 
 class TestSettings(unittest.TestCase):

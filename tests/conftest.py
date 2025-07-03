@@ -33,10 +33,13 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 
 @pytest_asyncio.fixture(autouse=True)
 async def cleanup_user() -> AsyncGenerator[None, None]:
-    yield
-    async for db in get_db():
-        for email in test_user_emails:
-            await db.execute(delete(User).where(User.email == email))
-        await db.commit()
-        break
-    test_user_emails.clear()
+    try:
+        yield
+    finally:
+        async for db in get_db():
+            for email in test_user_emails:
+                await db.execute(delete(User).where(User.email == email))
+            await db.commit()
+            break
+        test_user_emails.clear()
+
