@@ -3,6 +3,9 @@ name = "mysql-python-app"
 version = "0.1.0"
 description = "A MySQL + Python application"
 authors = ["Padma Dey <padma@klizos.com>"]
+packages = [
+  { include = "app", from = "backend" }
+]
 
 [tool.poetry.dependencies]
 python = ">=3.12,<4.0"
