@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ["padma"]
 
+permissions:
+  contents: read
+
 jobs:
   use-reusable:
     uses: ./.github/workflows/ci-template.yml
