@@ -1,13 +1,13 @@
-name: Docker CI Runner
+name: Call Reusable CI Workflow
 
 on:
   push:
-    branches: ['padma']
+    branches: ["padma"]
   pull_request:
-    branches: ['padma']
+    branches: ["padma"]
 
 jobs:
-  call-ci:
-    uses: ./github/workflows/ci-template.yml
+  use-reusable:
+    uses: ./.github/workflows/ci-template.yml@padma
     with:
       python-version: '3.12'

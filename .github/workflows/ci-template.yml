@@ -8,10 +8,6 @@ on:
         type: string
         default: '3.12'
 
-      branch:
-        required: false
-        type: string
-        default: 'padma'
 
 jobs:
   build:
