@@ -8,6 +8,6 @@ on:
 
 jobs:
   use-reusable:
-    uses: ./.github/workflows/ci-template.yml@padma
+    uses: ./.github/workflows/ci-template.yml
     with:
       python-version: '3.12'
