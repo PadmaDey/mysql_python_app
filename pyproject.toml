@@ -1,5 +1,8 @@
-[project]
-version = "v1.0.2"
+[tool.poetry]
+name = "mysql-python-app"
+version = "0.1.0"
+description = "A MySQL + Python application"
+authors = ["Padma Dey <padma@klizos.com>"]
 
 [tool.black]
 line-length = 150
