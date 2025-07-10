@@ -1,0 +1,13 @@
+name: Docker CI Runner
+
+on:
+  push:
+    branches: ['padma']
+  pull_request:
+    branches: ['padma']
+
+jobs:
+  call-ci:
+    uses: ./github/workflows/ci-template.yml
+    with:
+      python-version: '3.12'
