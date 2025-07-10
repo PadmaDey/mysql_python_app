@@ -3,6 +3,11 @@ name = "mysql-python-app"
 version = "0.1.0"
 description = "A MySQL + Python application"
 authors = ["Padma Dey <padma@klizos.com>"]
+python = ">=3.12,<4.0"  
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+pymysql = "^1.1"
 
 [tool.black]
 line-length = 150
@@ -28,9 +33,6 @@ extend_skip = ["env"]
 
 [tool.bandit]
 exclude_dirs = ["*/env/*"]
-
-[tool.poetry.dependencies]
-pymysql = "^1.1"
 
 [tool.pytest.ini_options]
 pythonpath = ["backend"]
