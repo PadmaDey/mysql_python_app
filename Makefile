@@ -16,4 +16,4 @@ test:
 	pytest
 
 db:
-	docker run -d --name mysql -p 3307:3306 --env-file ./env/db/.env -v mysql_data:/var/lib/mysql --rm mysql:8.4
+	docker run -d --name mysql -p 3306:3306 --env-file ./env/db/.env -v mysql_data:/var/lib/mysql --rm mysql:latest
