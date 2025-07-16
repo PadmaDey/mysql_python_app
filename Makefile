@@ -1,10 +1,4 @@
-# Load environment variables from .env file
-ifneq (,$(wildcard env/backend/.env))
-	include env/backend/.env
-	export
-endif
-
-.PHONY: build down logs local test
+.PHONY: build down logs local test db
 
 build:
 	docker compose up --build
@@ -20,3 +14,6 @@ local:
 
 test:
 	pytest
+
+db:
+	docker run -d --name mysql -p 3307:3306 --env-file ./env/db/.env -v mysql_data:/var/lib/mysql --rm mysql:8.4
