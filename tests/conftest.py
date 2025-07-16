@@ -21,7 +21,7 @@ async def register_test_email(email: str):
 @pytest_asyncio.fixture
 async def test_client() -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as client:
+    async with AsyncClient(transport=transport, base_url="http://localhost:8080") as client:
         yield client
 
 

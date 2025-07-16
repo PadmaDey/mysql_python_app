@@ -41,4 +41,4 @@ exclude_dirs = ["*/env/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["backend"]
-env_files = [".env.test"]
+env_files = ["test/.env"]
