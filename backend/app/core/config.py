@@ -24,12 +24,6 @@ class Settings(BaseSettings):
     # MYSQL_HOST: str = config("MYSQL_HOST", default="localhost")
     MYSQL_HOST: str = config("MYSQL_HOST", default="mysql")
 
-    # @property
-    # def ASYNC_DB_URL(self) -> str:
-    #     return (
-    #         f"mysql+asyncmy://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
-    #         f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
-    #     )
 
     @property
     def ASYNC_DB_URL(self) -> str:
