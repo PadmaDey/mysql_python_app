@@ -1,4 +1,4 @@
-.PHONY: build down logs local
+.PHONY: build down logs local test db
 
 build:
 	docker compose up --build 
@@ -15,4 +15,6 @@ local:
 test:
 	pytest
 
+db:
+	docker run -d --name mysql -p 3306:3306 --env-file ./env/db/.env -v mysql_data:/var/lib/mysql --rm mysql:latest
 
