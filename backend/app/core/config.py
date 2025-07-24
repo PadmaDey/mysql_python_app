@@ -22,14 +22,22 @@ class Settings(BaseSettings):
     MYSQL_HOST: str = config("MYSQL_HOST", default="localhost")
 
 
+    # @property
+    # def ASYNC_DB_URL(self) -> str:
+    #     actual_host = (
+    #         "localhost" if os.getenv("ENV") == "local" else self.MYSQL_HOST
+    #     )
+    #     return (
+    #         f"mysql+asyncmy://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
+    #         f"@{actual_host}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
+    #     )
+
     @property
     def ASYNC_DB_URL(self) -> str:
-        actual_host = (
-            "localhost" if os.getenv("ENV") == "local" else self.MYSQL_HOST
-        )
+        # Always use MYSQL_HOST unless it's not provided
         return (
             f"mysql+asyncmy://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}"
-            f"@{actual_host}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
+            f"@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{self.MYSQL_DATABASE}"
         )
 
 
