@@ -1,4 +1,4 @@
-.PHONY: build down logs local test db
+.PHONY: build down logs local restart test db
 
 build:
 	docker compose up --build 
@@ -11,6 +11,10 @@ logs:
 
 local:
 	cd backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8080
+
+restart:
+	make down
+	make build
 
 test:
 	pytest
