@@ -1,4 +1,4 @@
-.PHONY: build down logs local restart test db
+.PHONY: build down logs local restart test db ci-pipeline clean tree
 
 build:
 	docker compose up --build 
@@ -22,3 +22,14 @@ test:
 db:
 	docker run -d --name mysql -p 3306:3306 --env-file ./env/db/.env -v mysql_data:/var/lib/mysql --rm mysql:latest
 
+ci-pipeline:
+	act
+
+clean:
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+	find . -type d -name ".pytest_cache" -exec rm -rf {} +
+	find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	find . -name "*.pyc" -delete
+
+tree:
+	tree -I "mysql_conn_venv|__pycache__|.pytest_cache|.mypy_cache"
