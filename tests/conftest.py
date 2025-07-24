@@ -1,4 +1,5 @@
 import asyncio
+import pytest
 import pytest_asyncio
 from collections.abc import AsyncGenerator
 from httpx import AsyncClient, ASGITransport
@@ -9,12 +10,22 @@ from backend.app.main import app
 from backend.app.db.database import AsyncSessionLocal
 from backend.app.models.user import User
 
+from dotenv import load_dotenv
+load_dotenv(".env.test")
+
 # Track test users to clean up after each test
 test_user_emails = set()
 
 
 async def register_test_email(email: str):
     test_user_emails.add(email)
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Ensure a clean event loop for async tests across platforms."""
+    loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest_asyncio.fixture
