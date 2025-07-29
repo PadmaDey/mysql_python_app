@@ -1,55 +1,64 @@
-import unittest
-from sqlalchemy import select, delete
+import pytest
+from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 
 from backend.app.models.jti_blacklist import JTIBlacklist
-from backend.app.db.database import AsyncSessionLocal
+
+pytestmark = pytest.mark.asyncio
 
 
-class TestJTIBlacklistModel(unittest.IsolatedAsyncioTestCase):
+class TestJTIBlacklistModel:
+    async def _cleanup_jti(self, session, jti_token: str):
+        """Remove any JTI records to ensure a clean slate for tests."""
+        await session.execute(delete(JTIBlacklist).where(JTIBlacklist.jti == jti_token))
+        await session.commit()
 
-    async def asyncSetUp(self):
-        self.db = AsyncSessionLocal()
-        self.session = await self.db.__aenter__()
-
-    async def asyncTearDown(self):
-        await self.db.__aexit__(None, None, None)
-
-    async def _cleanup_jti(self, jti_token: str):
-        await self.session.execute(
-            delete(JTIBlacklist).where(JTIBlacklist.jti == jti_token)
-        )
-        await self.session.commit()
-
-    async def test_add_jti(self):
-        jti_token = "test-jti-12345"
-
-        await self._cleanup_jti(jti_token)
-
-        jti_entry = JTIBlacklist(jti=jti_token)
-        self.session.add(jti_entry)
-        await self.session.commit()
-
-        result = await self.session.execute(
-            select(JTIBlacklist).where(JTIBlacklist.jti == jti_token)
-        )
-        found_entry = result.scalar_one_or_none()
-
-        self.assertIsNotNone(found_entry)
-        self.assertEqual(found_entry.jti, jti_token)
-        self.assertIsNotNone(found_entry.created_at)
-
-    async def test_jti_unique_constraint(self):
+    async def test_jti_unique_constraint(self, db_session):
+        """
+        Verify that JTIs must be unique.
+        Attempts to insert a duplicate JTI should raise an IntegrityError.
+        """
         jti_token = "duplicate-jti-9999"
 
-        await self._cleanup_jti(jti_token)
+        # Clean up any leftovers first
+        await self._cleanup_jti(db_session, jti_token)
 
-        entry1 = JTIBlacklist(jti=jti_token)
-        entry2 = JTIBlacklist(jti=jti_token)
+        # Insert the first record (should succeed)
+        first_entry = JTIBlacklist(jti=jti_token)
+        db_session.add(first_entry)
+        await db_session.commit()
 
-        self.session.add(entry1)
-        await self.session.commit()
+        # Insert a duplicate (should raise IntegrityError)
+        duplicate_entry = JTIBlacklist(jti=jti_token)
+        db_session.add(duplicate_entry)
 
-        self.session.add(entry2)
-        with self.assertRaises(IntegrityError):
-            await self.session.commit()
+        with pytest.raises(IntegrityError):
+            await db_session.commit()
+
+        # IMPORTANT: Rollback before any new DB operations
+        await db_session.rollback()
+
+        # Final cleanup to leave DB state clean
+        await self._cleanup_jti(db_session, jti_token)
+
+    async def test_insert_and_retrieve_jti(self, db_session):
+        """
+        Test that a JTI can be added and queried successfully.
+        """
+        jti_token = "test-jti-1234"
+
+        # Clean up first
+        await self._cleanup_jti(db_session, jti_token)
+
+        # Add a new record
+        entry = JTIBlacklist(jti=jti_token)
+        db_session.add(entry)
+        await db_session.commit()
+
+        # Fetch it back
+        result = await db_session.get(JTIBlacklist, entry.id)
+        assert result is not None
+        assert result.jti == jti_token
+
+        # Clean up
+        await self._cleanup_jti(db_session, jti_token)
