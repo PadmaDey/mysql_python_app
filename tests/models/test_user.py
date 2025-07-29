@@ -1,59 +1,58 @@
-import unittest
+import pytest
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from backend.app.models.user import User
-from backend.app.db.database import AsyncSessionLocal
 from tests.conftest import register_test_email
 
-class TestUserModel(unittest.IsolatedAsyncioTestCase):
+@pytest.mark.asyncio
+async def test_create_user(db_session):
+    email = "unittestuser@example.com"
+    await register_test_email(email)
 
-    async def asyncSetUp(self):
-        self.db = AsyncSessionLocal()
-        self.session = await self.db.__aenter__()
+    user = User(
+        name="Unit User",
+        email=email,
+        phone_no=1234567890,
+        password_hash="hashed_pass"
+    )
 
-    async def asyncTearDown(self):
-        await self.db.__aexit__(None, None, None)
+    db_session.add(user)
+    await db_session.commit()
 
-    async def test_create_user(self):
-        email = "unittestuser@example.com"
-        await register_test_email(email)
+    result = await db_session.execute(select(User).where(User.email == email))
+    saved_user = result.scalar_one_or_none()
 
-        user = User(
-            name="Unit User",
-            email=email,
-            phone_no=1234567890,
-            password_hash="hashed_pass"
-        )
-        self.session.add(user)
-        await self.session.commit()
+    assert saved_user is not None
+    assert saved_user.name == "Unit User"
+    assert saved_user.phone_no == 1234567890
+    assert saved_user.password_hash == "hashed_pass"
+    assert saved_user.created_at is not None
+    assert saved_user.updated_at is not None
 
-        result = await self.session.execute(select(User).where(User.email == email))
-        saved_user = result.scalar_one_or_none()
 
-        self.assertIsNotNone(saved_user)
-        self.assertEqual(saved_user.name, "Unit User")
-        self.assertEqual(saved_user.phone_no, 1234567890)
-        self.assertEqual(saved_user.password_hash, "hashed_pass")
-        self.assertIsNotNone(saved_user.created_at)
-        self.assertIsNotNone(saved_user.updated_at)
+@pytest.mark.asyncio
+async def test_email_unique_constraint(db_session):
+    email = "duplicateuser@example.com"
+    await register_test_email(email)
 
-    async def test_email_unique_constraint(self):
-        email = "duplicateuser@example.com"
-        await register_test_email(email)
+    user1 = User(
+        name="First User",
+        email=email,
+        password_hash="hash1"
+    )
+    user2 = User(
+        name="Second User",
+        email=email,
+        password_hash="hash2"
+    )
 
-        user1 = User(
-            name="First User",
-            email=email,
-            password_hash="hash1"
-        )
-        user2 = User(
-            name="Second User",
-            email=email,
-            password_hash="hash2"
-        )
+    db_session.add(user1)
+    await db_session.commit()
 
-        self.session.add(user1)
-        await self.session.commit()
-
-        self.session.add(user2)
-        with self.assertRaises(Exception):  # IntegrityError or DB-specific
-            await self.session.commit()
+    db_session.add(user2)
+    with pytest.raises(IntegrityError):
+        try:
+            await db_session.commit()
+        finally:
+            # Critical: rollback to reset session state after failed commit
+            await db_session.rollback()
