@@ -1,21 +1,22 @@
 import unittest
 from datetime import timedelta
-from jose import jwt
 from uuid import uuid4, UUID
 import os
-
-from sqlalchemy import select, delete
+from sqlalchemy import delete
 
 from backend.app.auth import jwt_handler
 from backend.app.utils.validation import get_current_utc_time
 from backend.app.models.jti_blacklist import JTIBlacklist
-from backend.app.db.database import AsyncSessionLocal
+from backend.app.db.database import AsyncSessionLocal, engine
 
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "testsecretkey")
 ALGORITHM = "HS256"
 
 
 class TestJWTHandler(unittest.IsolatedAsyncioTestCase):
+    async def asyncTearDown(self):
+        # Ensure engine is disposed after each test (avoids lingering tasks)
+        await engine.dispose()
 
     async def test_create_and_decode_access_token(self):
         data = {"email": "test@example.com"}
@@ -55,15 +56,13 @@ class TestJWTHandler(unittest.IsolatedAsyncioTestCase):
     async def test_is_token_blacklisted_true(self):
         jti = str(uuid4())
         async with AsyncSessionLocal() as db:
-            # Ensure clean state
+            # Clean state
             await db.execute(delete(JTIBlacklist).where(JTIBlacklist.jti == jti))
             await db.commit()
 
-            # Insert
             db.add(JTIBlacklist(jti=jti))
             await db.commit()
 
-            # Verify blacklist detection
             result = await jwt_handler.is_token_blacklisted(jti, db)
             self.assertTrue(result)
 
