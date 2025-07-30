@@ -77,11 +77,23 @@
 #         run: |
 #           docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
 
+#       - name: 🐛 Debug env/db/.env (only for ACT/local testing)
+#         if: env.ACT
+#         run: cat env/db/.env
 
 #       - name: 🏗️ Build Docker Images using Makefile
 #         run: |
-#           make down || true  # ignore errors on first time
+#           echo "CI=${CI}"
+#           make down || true
 #           make build
+#         env:
+#           CI: true
+#           DOCKER_BUILDKIT: 0
+
+#       - name: ⏳ Wait for Services to Be Ready (optional)
+#         run: sleep 20
+
+
 
 
 name: Docker CI Pipeline
@@ -109,7 +121,7 @@ jobs:
         run: |
           mkdir -p env/backend env/db
           echo "${{ secrets.BACKEND_ENV_FILE }}" > env/backend/.env
-          echo "${{ secrets.DB_ENV_FILE }}" > env/db/.env
+          echo "${{ secrets.MYSQL_ENV_DB }}" > env/db/.env
           echo "${{ secrets.TEST_ENV_FILE }}" > .env.test
 
       - name: 🐍 Set up Python 3.12
@@ -129,19 +141,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
-
-      - name: 🧪 Run Tests with Pytest
-        run: |
-          pytest
-        env:
-          PYTHONPATH: backend
-          ENV: local
-          SECRET_KEY: testsecretkey
-          MYSQL_HOST: localhost
-          MYSQL_PORT: 3306
-          MYSQL_DATABASE: user_info
-          MYSQL_USER: emp_1
-          MYSQL_PASSWORD: qwerty
 
       - name: 🐳 Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -163,10 +162,6 @@ jobs:
         run: |
           docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
 
-      - name: 🐛 Debug env/db/.env (only for ACT/local testing)
-        if: env.ACT
-        run: cat env/db/.env
-
       - name: 🏗️ Build Docker Images using Makefile
         run: |
           echo "CI=${CI}"
@@ -176,5 +171,18 @@ jobs:
           CI: true
           DOCKER_BUILDKIT: 0
 
-      - name: ⏳ Wait for Services to Be Ready (optional)
+      - name: ⏳ Wait for Services to Be Ready
         run: sleep 20
+
+      - name: 🧪 Run Tests with Pytest
+        run: |
+          pytest
+        env:
+          PYTHONPATH: backend
+          ENV: local
+          SECRET_KEY: testsecretkey
+          MYSQL_HOST: localhost
+          MYSQL_PORT: 3306
+          MYSQL_DATABASE: user_info
+          MYSQL_USER: emp_1
+          MYSQL_PASSWORD: qwerty
