@@ -1,3 +1,89 @@
+# name: Docker CI Pipeline
+
+# on:
+#   push:
+#     branches: ["main_copy"]
+#   pull_request:
+#     branches: ["main_copy"]
+
+# jobs:
+#   test-and-build:
+#     name: 🧪 Test & 🏗️ Build Docker Image
+#     runs-on: ubuntu-latest
+
+#     defaults:
+#       run:
+#         shell: bash
+
+#     steps:
+#       - name: 📥 Checkout Repository
+#         uses: actions/checkout@v4
+
+#       - name: 📂 Create Environment Files
+#         run: |
+#           mkdir -p env/backend env/db
+#           echo "${{ secrets.BACKEND_ENV_FILE }}" > env/backend/.env
+#           echo "${{ secrets.DB_ENV_FILE }}" > env/db/.env
+#           echo "${{ secrets.TEST_ENV_FILE }}" > .env.test
+
+#       - name: 🐍 Set up Python 3.12
+#         uses: actions/setup-python@v4
+#         with:
+#           python-version: "3.12"
+
+#       - name: 📦 Cache pip dependencies
+#         uses: actions/cache@v4
+#         with:
+#           path: ~/.cache/pip
+#           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+#           restore-keys: |
+#             ${{ runner.os }}-pip-
+
+#       - name: 📥 Install Python Dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install -r backend/requirements.txt
+
+#       - name: 🧪 Run Tests with Pytest
+#         run: |
+#           pytest
+#         env:
+#           PYTHONPATH: backend
+#           ENV: local
+#           SECRET_KEY: testsecretkey
+#           MYSQL_HOST: localhost
+#           MYSQL_PORT: 3306
+#           MYSQL_DATABASE: user_info
+#           MYSQL_USER: emp_1
+#           MYSQL_PASSWORD: qwerty
+
+#       - name: 🐳 Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v3
+
+#       - name: 🧰 Install Docker Compose (CLI v2)
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install -y docker-compose
+
+#       - name: 🧼 Set up Docker Build Cache
+#         uses: actions/cache@v4
+#         with:
+#           path: /tmp/.buildx-cache
+#           key: ${{ runner.os }}-buildx-${{ github.sha }}
+#           restore-keys: |
+#             ${{ runner.os }}-buildx-
+
+#       - name: 🧽 Kill any running MySQL container (prevent port 3306 conflict)
+#         run: |
+#           docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
+
+
+#       - name: 🏗️ Build Docker Images using Makefile
+#         run: |
+#           make down || true  # ignore errors on first time
+#           make build
+
+
 name: Docker CI Pipeline
 
 on:
@@ -8,22 +94,30 @@ on:
 
 jobs:
   test-and-build:
-    name: Run Tests & Build Docker Image
+    name: 🧪 Test & 🏗️ Build Docker Image
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - name: 📦 Checkout repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
+
+      - name: 📂 Create Environment Files
+        run: |
+          mkdir -p env/backend env/db
+          echo "${{ secrets.BACKEND_ENV_FILE }}" > env/backend/.env
+          echo "${{ secrets.DB_ENV_FILE }}" > env/db/.env
+          echo "${{ secrets.TEST_ENV_FILE }}" > .env.test
 
       - name: 🐍 Set up Python 3.12
         uses: actions/setup-python@v4
         with:
           python-version: "3.12"
 
-      - name: 🐳 Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: ⚡ Cache pip dependencies
+      - name: 📦 Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
@@ -31,24 +125,56 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: 📥 Install Python dependencies
+      - name: 📥 Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: ✅ Run Pytest
+      - name: 🧪 Run Tests with Pytest
         run: |
           pytest
         env:
           PYTHONPATH: backend
+          ENV: local
+          SECRET_KEY: testsecretkey
+          MYSQL_HOST: localhost
+          MYSQL_PORT: 3306
+          MYSQL_DATABASE: user_info
+          MYSQL_USER: emp_1
+          MYSQL_PASSWORD: qwerty
 
-      - name: 🛠️ Setup fallback .env files if missing (for local/act)
-        run: |
-          mkdir -p env/db env/backend
-          test -f env/db/.env || echo "MYSQL_ROOT_PASSWORD=localdev" > env/db/.env
-          test -f env/backend/.env || echo "API_SECRET_KEY=localkey" > env/backend/.env
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: 🐳 Build Docker image using Makefile
+      - name: 🧰 Install Docker Compose (CLI v2)
         run: |
-          make down || echo "Skipping docker compose down (env missing or not running)"
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: 🧼 Set up Docker Build Cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: 🧽 Kill any running MySQL container (prevent port 3306 conflict)
+        run: |
+          docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
+
+      - name: 🐛 Debug env/db/.env (only for ACT/local testing)
+        if: env.ACT
+        run: cat env/db/.env
+
+      - name: 🏗️ Build Docker Images using Makefile
+        run: |
+          echo "CI=${CI}"
+          make down || true
           make build
+        env:
+          CI: true
+          DOCKER_BUILDKIT: 0
+
+      - name: ⏳ Wait for Services to Be Ready (optional)
+        run: sleep 20

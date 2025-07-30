@@ -205,3 +205,4 @@ docker.txt
 backend/app/utils/secret_key.py
 test.py
 bin/
+.secrets
