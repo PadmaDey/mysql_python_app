@@ -1,0 +1,54 @@
+name: Docker CI Pipeline
+
+on:
+  push:
+    branches: ["main_copy"]
+  pull_request:
+    branches: ["main_copy"]
+
+jobs:
+  test-and-build:
+    name: Run Tests & Build Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: ⚡ Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: 📥 Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: ✅ Run Pytest
+        run: |
+          pytest
+        env:
+          PYTHONPATH: backend
+
+      - name: 🛠️ Setup fallback .env files if missing (for local/act)
+        run: |
+          mkdir -p env/db env/backend
+          test -f env/db/.env || echo "MYSQL_ROOT_PASSWORD=localdev" > env/db/.env
+          test -f env/backend/.env || echo "API_SECRET_KEY=localkey" > env/backend/.env
+
+      - name: 🐳 Build Docker image using Makefile
+        run: |
+          make down || echo "Skipping docker compose down (env missing or not running)"
+          make build

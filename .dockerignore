@@ -1,2 +1,3 @@
 mysql_conn_venv/
 .pytest_cache/
+bin/

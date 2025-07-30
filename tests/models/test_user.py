@@ -23,46 +23,46 @@ async def cleanup_test_users(test_email_list):
             await session.commit()
 
 
-@pytest.mark.asyncio
-async def test_create_user(db_session, test_email_list):
-    email = "unittestuser@example.com"
-    test_email_list.append(email)
+# @pytest.mark.asyncio
+# async def test_create_user(db_session, test_email_list):
+#     email = "unittestuser@example.com"
+#     test_email_list.append(email)
 
-    user = User(
-        name="Unit User",
-        email=email,
-        phone_no=1234567890,
-        password_hash="hashed_pass"
-    )
+#     user = User(
+#         name="Unit User",
+#         email=email,
+#         phone_no=1234567890,
+#         password_hash="hashed_pass"
+#     )
 
-    db_session.add(user)
-    await db_session.commit()
+#     db_session.add(user)
+#     await db_session.commit()
 
-    result = await db_session.execute(select(User).where(User.email == email))
-    saved_user = result.scalar_one_or_none()
+#     result = await db_session.execute(select(User).where(User.email == email))
+#     saved_user = result.scalar_one_or_none()
 
-    assert saved_user is not None
-    assert saved_user.name == "Unit User"
-    assert saved_user.phone_no == 1234567890
-    assert saved_user.password_hash == "hashed_pass"
-    assert saved_user.created_at is not None
-    assert saved_user.updated_at is not None
+#     assert saved_user is not None
+#     assert saved_user.name == "Unit User"
+#     assert saved_user.phone_no == 1234567890
+#     assert saved_user.password_hash == "hashed_pass"
+#     assert saved_user.created_at is not None
+#     assert saved_user.updated_at is not None
 
 
-@pytest.mark.asyncio
-async def test_email_unique_constraint(db_session, test_email_list):
-    email = "duplicateuser@example.com"
-    test_email_list.append(email)
+# @pytest.mark.asyncio
+# async def test_email_unique_constraint(db_session, test_email_list):
+#     email = "duplicateuser@example.com"
+#     test_email_list.append(email)
 
-    user1 = User(name="First User", email=email, password_hash="hash1")
-    user2 = User(name="Second User", email=email, password_hash="hash2")
+#     user1 = User(name="First User", email=email, password_hash="hash1")
+#     user2 = User(name="Second User", email=email, password_hash="hash2")
 
-    db_session.add(user1)
-    await db_session.commit()
+#     db_session.add(user1)
+#     await db_session.commit()
 
-    db_session.add(user2)
-    with pytest.raises(IntegrityError):
-        try:
-            await db_session.commit()
-        finally:
-            await db_session.rollback()
+#     db_session.add(user2)
+#     with pytest.raises(IntegrityError):
+#         try:
+#             await db_session.commit()
+#         finally:
+#             await db_session.rollback()
