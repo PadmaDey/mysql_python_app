@@ -1,11 +1,18 @@
 name: Setup Environment Files
 description: Create backend and DB .env files
+inputs:
+  backend_env:
+    required: true
+  mysql_env:
+    required: true
+  test_env:
+    required: true
 runs:
   using: "composite"
   steps:
     - run: |
         mkdir -p env/backend env/db
-        echo "${{ secrets.BACKEND_ENV_FILE }}" > env/backend/.env
-        echo "${{ secrets.MYSQL_ENV_DB }}" > env/db/.env
-        echo "${{ secrets.TEST_ENV_FILE }}" > .env.test
+        echo "${{ inputs.backend_env }}" > env/backend/.env
+        echo "${{ inputs.mysql_env }}" > env/db/.env
+        echo "${{ inputs.test_env }}" > .env.test
       shell: bash

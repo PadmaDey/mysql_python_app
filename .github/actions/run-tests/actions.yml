@@ -1,17 +1,38 @@
 name: Run Pytest Tests
-description: Run Python unit tests with env
+description: Run Python unit tests with environment variables
+
+inputs:
+  secret_key:
+    description: Application secret key
+    required: false
+    default: testsecretkey
+  mysql_host:
+    default: localhost
+    required: false
+  mysql_port:
+    default: "3306"
+    required: false
+  mysql_database:
+    default: user_info
+    required: false
+  mysql_user:
+    default: emp_1
+    required: false
+  mysql_password:
+    default: qwerty
+    required: false
+
 runs:
   using: "composite"
   steps:
-    - run: |
-        pytest
+    - run: pytest
       shell: bash
       env:
         PYTHONPATH: backend
         ENV: local
-        SECRET_KEY: testsecretkey
-        MYSQL_HOST: localhost
-        MYSQL_PORT: 3306
-        MYSQL_DATABASE: user_info
-        MYSQL_USER: emp_1
-        MYSQL_PASSWORD: qwerty
+        SECRET_KEY: ${{ inputs.secret_key }}
+        MYSQL_HOST: ${{ inputs.mysql_host }}
+        MYSQL_PORT: ${{ inputs.mysql_port }}
+        MYSQL_DATABASE: ${{ inputs.mysql_database }}
+        MYSQL_USER: ${{ inputs.mysql_user }}
+        MYSQL_PASSWORD: ${{ inputs.mysql_password }}

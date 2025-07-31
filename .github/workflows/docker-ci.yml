@@ -17,6 +17,10 @@ jobs:
 
       - name: 📂 Setup Environment Files
         uses: ./.github/actions/setup-env
+        with:
+          backend_env: ${{ secrets.BACKEND_ENV_FILE }}
+          mysql_env: ${{ secrets.MYSQL_ENV_DB }}
+          test_env: ${{ secrets.TEST_ENV_FILE }}
 
       - name: 🐍 Setup Python
         uses: ./.github/actions/setup-python
