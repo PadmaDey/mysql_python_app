@@ -7,8 +7,8 @@ on:
     branches: [main_copy]
 
 jobs:
-  test-and-build:
-    name: 🧪 Test & 🏗️ Build Docker Image
+  test:
+    name: 🧪 Run Tests with MySQL
     runs-on: ubuntu-latest
 
     steps:
@@ -22,16 +22,39 @@ jobs:
           mysql_env: ${{ secrets.MYSQL_ENV_DB }}
           test_env: ${{ secrets.TEST_ENV_FILE }}
 
+      - name: 🐳 Setup Docker
+        uses: ./.github/actions/setup-docker
+
+      - name: 🏗️ Start DB Services (docker-compose)
+        run: |
+          make down || true
+          make build
+          sleep 20  # wait for DB to be ready
+
       - name: 🐍 Setup Python
         uses: ./.github/actions/setup-python
 
       - name: 🧪 Run Tests
         uses: ./.github/actions/run-tests
 
+  build:
+    name: 🏗️ Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test  # only runs if test job passes
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📂 Setup Environment Files
+        uses: ./.github/actions/setup-env
+        with:
+          backend_env: ${{ secrets.BACKEND_ENV_FILE }}
+          mysql_env: ${{ secrets.MYSQL_ENV_DB }}
+          test_env: ${{ secrets.TEST_ENV_FILE }}
+
       - name: 🐳 Setup Docker
         uses: ./.github/actions/setup-docker
 
       - name: 🏗️ Build Docker
         uses: ./.github/actions/build-docker
-
-
