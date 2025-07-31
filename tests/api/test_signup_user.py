@@ -23,27 +23,7 @@ async def test_signup_success(test_client):
         "status": True
     }
 
-
-# Duplicate signup
-# @pytest.mark.asyncio
-# async def test_signup_duplicate_email(test_client):
-#     payload = {
-#         "name": "Test User2",
-#         "email": "duplicateuser@example.com",
-#         "phone_no": 9876543210,
-#         "password": "Test@123"
-#     }
-
-#     await register_test_email(payload["email"])
-#     await test_client.post("/api/users/signup", json=payload)
     
-#     response = await test_client.post("/api/users/signup", json=payload)
-#     data = response.json()
-
-#     assert response.status_code == 409
-#     assert data == {
-#         "detail": "A user with this mail already exists."
-#     }
 
 @pytest.mark.asyncio
 async def test_signup_duplicate_email(test_client):
