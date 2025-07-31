@@ -25,11 +25,13 @@ jobs:
       - name: 🐍 Setup Python
         uses: ./.github/actions/setup-python
 
+      - name: 🧪 Run Tests
+        uses: ./.github/actions/run-tests
+
       - name: 🐳 Setup Docker
         uses: ./.github/actions/setup-docker
 
       - name: 🏗️ Build Docker
         uses: ./.github/actions/build-docker
 
-      - name: 🧪 Run Tests
-        uses: ./.github/actions/run-tests
+
