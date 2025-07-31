@@ -3,20 +3,20 @@ FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies, including apt-utils to suppress debconf warning
+# Suppress debconf warnings and install build dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         gcc \
         python3-dev \
-        curl \
-        apt-utils \
-        debconf-utils && \
+        curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies with root-user-action=ignore to suppress pip warning
+# Install Python dependencies with root-user-action suppressed
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
+RUN pip install --upgrade pip --root-user-action=ignore && \
     pip install --root-user-action=ignore --prefix=/install --no-cache-dir -r requirements.txt
 
 # Download wait-for-it.sh
@@ -28,13 +28,13 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install runtime dependencies including apt-utils
+# Suppress debconf warnings and install runtime dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         default-mysql-client \
-        curl \
-        apt-utils \
-        debconf-utils && \
+        curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -42,12 +42,12 @@ RUN apt-get update && \
 COPY --from=builder /install /usr/local
 ENV PATH=/usr/local/bin:$PATH
 
-# Copy app code and wait-for-it.sh
+# Copy application code and wait-for-it.sh
 COPY --from=builder /wait-for-it.sh /wait-for-it.sh
 COPY ./app ./app
 
 # Expose the application port
 EXPOSE 8080
 
-# Run FastAPI using uvicorn
+# Run FastAPI app using uvicorn after MySQL is ready
 CMD ["/wait-for-it.sh", "mysql:3306", "--", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
