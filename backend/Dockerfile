@@ -1,22 +1,23 @@
-# # ===== Stage 1: Build =====
+# ===== Stage 1: Build =====
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies
+# Install build dependencies, including apt-utils to suppress debconf warning
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         gcc \
         python3-dev \
         curl \
-        apt-utils && \
+        apt-utils \
+        debconf-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
+# Install Python dependencies with root-user-action=ignore to suppress pip warning
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install --prefix=/install --no-cache-dir --root-user-action=ignore -r requirements.txt
+    pip install --root-user-action=ignore --prefix=/install --no-cache-dir -r requirements.txt
 
 # Download wait-for-it.sh
 RUN curl -o /wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
@@ -27,20 +28,21 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install runtime dependencies
+# Install runtime dependencies including apt-utils
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         default-mysql-client \
         curl \
-        apt-utils && \
+        apt-utils \
+        debconf-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy only installed Python packages from builder
+# Copy installed Python packages from builder
 COPY --from=builder /install /usr/local
 ENV PATH=/usr/local/bin:$PATH
 
-# Copy app code and wait-for-it.sh script
+# Copy app code and wait-for-it.sh
 COPY --from=builder /wait-for-it.sh /wait-for-it.sh
 COPY ./app ./app
 
