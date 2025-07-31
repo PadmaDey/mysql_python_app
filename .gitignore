@@ -206,3 +206,5 @@ backend/app/utils/secret_key.py
 test.py
 bin/
 .secrets
+.github\workflows\docker-image-local.yml
+.github\workflows\docker-image.yml

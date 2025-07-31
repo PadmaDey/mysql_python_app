@@ -1,0 +1,27 @@
+name: Build Docker Images
+description: Docker build and clean-up
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - run: |
+        docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
+      shell: bash
+
+    - run: |
+        echo "CI=${CI}"
+        make down || true
+        make build
+      shell: bash
+      env:
+        CI: true
+        DOCKER_BUILDKIT: 0
+
+    - run: sleep 20
+      shell: bash

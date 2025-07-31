@@ -1,0 +1,11 @@
+name: Setup Docker & Docker Compose
+description: Install Docker Buildx & Compose
+runs:
+  using: "composite"
+  steps:
+    - uses: docker/setup-buildx-action@v3
+
+    - run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
+      shell: bash

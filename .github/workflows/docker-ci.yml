@@ -1,0 +1,31 @@
+name: Docker CI Pipeline
+
+on:
+  push:
+    branches: [main_copy]
+  pull_request:
+    branches: [main_copy]
+
+jobs:
+  test-and-build:
+    name: 🧪 Test & 🏗️ Build Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 📂 Setup Environment Files
+        uses: ./.github/actions/setup-env
+
+      - name: 🐍 Setup Python
+        uses: ./.github/actions/setup-python
+
+      - name: 🐳 Setup Docker
+        uses: ./.github/actions/setup-docker
+
+      - name: 🏗️ Build Docker
+        uses: ./.github/actions/build-docker
+
+      - name: 🧪 Run Tests
+        uses: ./.github/actions/run-tests

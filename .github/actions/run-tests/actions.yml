@@ -1,0 +1,17 @@
+name: Run Pytest Tests
+description: Run Python unit tests with env
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        pytest
+      shell: bash
+      env:
+        PYTHONPATH: backend
+        ENV: local
+        SECRET_KEY: testsecretkey
+        MYSQL_HOST: localhost
+        MYSQL_PORT: 3306
+        MYSQL_DATABASE: user_info
+        MYSQL_USER: emp_1
+        MYSQL_PASSWORD: qwerty
