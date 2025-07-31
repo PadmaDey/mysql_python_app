@@ -1,18 +1,22 @@
-# ===== Stage 1: Build =====
+# # ===== Stage 1: Build =====
 FROM python:3.12-slim AS builder
 
 WORKDIR /app
 
 # Install build dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends gcc python3-dev curl && \
+    apt-get install -y --no-install-recommends \
+        gcc \
+        python3-dev \
+        curl \
+        apt-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-    pip install --prefix=/install --no-cache-dir -r requirements.txt
+    pip install --prefix=/install --no-cache-dir --root-user-action=ignore -r requirements.txt
 
 # Download wait-for-it.sh
 RUN curl -o /wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
@@ -25,7 +29,10 @@ WORKDIR /app
 
 # Install runtime dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends default-mysql-client curl && \
+    apt-get install -y --no-install-recommends \
+        default-mysql-client \
+        curl \
+        apt-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

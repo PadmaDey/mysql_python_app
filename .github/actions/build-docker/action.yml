@@ -4,6 +4,10 @@ description: Build Docker images using Makefile and clean up MySQL conflicts
 runs:
   using: "composite"
   steps:
+    - name: 📁 Ensure Build Cache Directory Exists
+      run: mkdir -p /tmp/.buildx-cache
+      shell: bash
+
     - name: 💾 Restore Docker Build Cache
       uses: actions/cache@v4
       with:
