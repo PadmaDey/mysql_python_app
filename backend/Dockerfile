@@ -51,3 +51,4 @@ EXPOSE 8080
 
 # Run FastAPI app using uvicorn after MySQL is ready
 CMD ["/wait-for-it.sh", "mysql:3306", "--", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+
