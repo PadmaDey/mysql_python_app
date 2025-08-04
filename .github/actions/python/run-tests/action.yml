@@ -21,15 +21,21 @@ inputs:
   mysql_password:
     default: qwerty
     required: false
+  test_path:
+    description: Path to test files
+    required: false
+    default: backend/tests
 
 runs:
   using: "composite"
   steps:
-    - run: pytest
+    - run: |
+        echo "🔍 Running tests in: ${{ inputs.test_path }}"
+        pytest ${{ inputs.test_path }} --maxfail=3 --disable-warnings --tb=short
       shell: bash
       env:
-        PYTHONPATH: backend
         ENV: local
+        PYTHONPATH: backend
         SECRET_KEY: ${{ inputs.secret_key }}
         MYSQL_HOST: ${{ inputs.mysql_host }}
         MYSQL_PORT: ${{ inputs.mysql_port }}

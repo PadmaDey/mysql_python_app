@@ -1,0 +1,58 @@
+name: 🛡️ Docker Image Vulnerability Scan
+
+on:
+  workflow_call:
+    inputs:
+      image:
+        description: Docker image name (without tag)
+        required: true
+        type: string
+      image_tag:
+        description: Tag of the Docker image
+        required: true
+        type: string
+      environment:
+        description: Name of the environment (dev/staging/prod)
+        required: true
+        type: string
+
+jobs:
+  trivy-scan:
+    name: 🔍 Trivy Image Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.64.1_Linux-64bit.deb
+          sudo dpkg -i trivy_0.64.1_Linux-64bit.deb
+
+      - name: 📦 Download Docker Image Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-${{ inputs.image_tag }}
+
+      - name: 🐳 Load Docker Image
+        run: |
+          echo "Loading Docker image: ${{ inputs.image }}-${{ inputs.image_tag }}"
+          docker load -i ${{ inputs.image }}-${{ inputs.image_tag }}.tar
+
+      - name: 🛡️ Scan Image with Trivy
+        continue-on-error: true  # allows reporting even if scan fails
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ inputs.image }}:${{ inputs.image_tag }}
+          format: table
+          severity: HIGH,CRITICAL
+          vuln-type: os,library
+          output: trivy-report.txt
+          exit-code: 1  # fail the job if vulnerabilities found
+
+      - name: 📤 Upload Trivy Scan Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report-${{ inputs.environment }}
+          path: trivy-report.txt

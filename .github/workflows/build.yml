@@ -1,0 +1,39 @@
+name: 🏗️ Reusable Docker Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        description: Tag to apply to the Docker image
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐳 Setup Docker
+        uses: ./.github/actions/setup-docker.yml
+
+      - name: 🏗️ Build Docker Image (via Makefile)
+        uses: ./.github/actions/build-docker.yml
+
+      - name: 🐋 Tag Built Docker Image
+        run: |
+          docker tag backend-api:latest backend-api:${{ inputs.image_tag }}
+        shell: bash
+
+      - name: 📦 Save Docker Image to Tarball
+        run: |
+          docker save backend-api:${{ inputs.image_tag }} -o backend-api-${{ inputs.image_tag }}.tar
+        shell: bash
+
+      - name: ⬆️ Upload Docker Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-${{ inputs.image_tag }}
+          path: backend-api-${{ inputs.image_tag }}.tar

@@ -1,0 +1,54 @@
+name: Static Analysis (SAST - Bandit & CodeQL)
+
+on:
+  workflow_call:
+
+
+jobs:
+  bandit:
+    name: 🕵️ Python Bandit Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: 📦 Install Bandit
+        run: pip install bandit
+
+      - name: 🛡️ Run Bandit on Backend
+        run: bandit -r backend -ll -ii
+
+  codeql:
+    name: 🔐 CodeQL SAST Scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔧 Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: ⚙️ Build Application (Autobuild)
+        uses: github/codeql-action/autobuild@v3
+
+      - name: 🔍 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3

@@ -1,0 +1,33 @@
+name: 🧪 Unit Test Workflow
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    name: 🧪 Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 📂 Setup Environment
+        uses: ./.github/actions/env/setup
+
+        with:
+          backend_env: ${{ inputs.backend_env }}
+          mysql_env: ${{ inputs.mysql_env }}
+          test_env: ${{ inputs.test_env }}
+
+      - name: 🐳 Setup Docker
+        uses: ./.github/actions/docker/setup
+
+      - name: 🏗️ Build Container for Testing
+        run: make build
+
+      - name: 🐍 Setup Python
+        uses: ./.github/actions/python/setup
+
+      - name: 🧪 Run Tests
+        uses: ./.github/actions/python/run-tests

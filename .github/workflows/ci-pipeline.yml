@@ -1,0 +1,48 @@
+name: 🧪 Full CI Pipeline
+
+on:
+  push:
+    branches: [main_copy]
+  pull_request:
+    branches: [main_copy]
+  workflow_dispatch:
+
+# 🔐 Global permissions for reusable workflows like CodeQL
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  sast:
+    needs: lint
+    uses: ./.github/workflows/sast.yml
+
+  dependencies-scan:
+    needs: sast
+    uses: ./.github/workflows/dependencies-scan.yml
+
+  test:
+    name: 🧪 Run Unit Tests
+    needs: dependencies-scan
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+
+  build:
+    name: 🏗️ Build Docker Image
+    needs: test
+    uses: ./.github/workflows/build.yml
+    with:
+      image_tag: dev-${{ github.sha }}
+
+  scan:
+    name: 🔍 Docker Vulnerability Scan
+    needs: build
+    uses: ./.github/workflows/scan.yml
+    with:
+      image: backend-api
+      image_tag: dev-${{ github.sha }}
+      environment: dev
