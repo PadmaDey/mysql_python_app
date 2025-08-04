@@ -2,9 +2,9 @@ name: Docker CI Pipeline
 
 on:
   push:
-    branches: [main_copy]
+    branches: [new_branch]
   pull_request:
-    branches: [main_copy]
+    branches: [new_branch]
 
 jobs:
   test:
