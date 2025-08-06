@@ -21,15 +21,29 @@ runs:
         docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
       shell: bash
 
-    - name: 🏗️ Makefile Build (docker-compose)
+    - name: 🏗️ Build Docker Image with Tag
       run: |
         echo "CI=${CI}"
         make down || true
         make build
+
+        # Explicitly tag the latest built image as backend-api:latest
+        IMAGE_ID=$(docker images -q | head -n 1)
+        if [ -n "$IMAGE_ID" ]; then
+          docker tag "$IMAGE_ID" backend-api:latest
+          echo "✅ Tagged image $IMAGE_ID as backend-api:latest"
+        else
+          echo "❌ No image found to tag"
+          exit 1
+        fi
       shell: bash
       env:
         CI: true
         DOCKER_BUILDKIT: 0
+
+    - name: 🐳 List Docker Images (Debug)
+      run: docker images
+      shell: bash
 
     - name: ⏳ Wait for Services to Initialize
       run: sleep 20

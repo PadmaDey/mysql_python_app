@@ -87,14 +87,9 @@ jobs:
       - name: 🐳 Setup Docker
         uses: ./.github/actions/docker/setup
 
-      # 🏗️ Build Docker image
+      # 🏗️ Build Docker image (includes tagging)
       - name: 🏗️ Build Docker Image
         uses: ./.github/actions/docker/build
-
-      # 🐋 Tag Docker image with provided input tag
-      - name: 🐋 Tag Docker Image
-        run: |
-          docker tag backend-api:latest backend-api:${{ inputs.image_tag }}
 
       # 📦 Save Docker image as tarball
       - name: 📦 Save Docker Image to Tarball
