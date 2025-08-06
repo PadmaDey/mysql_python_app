@@ -1,0 +1,36 @@
+name: Build Docker Images
+description: Build Docker images using Makefile and clean up MySQL conflicts
+
+runs:
+  using: "composite"
+  steps:
+    - name: 📁 Ensure Build Cache Directory Exists
+      run: mkdir -p /tmp/.buildx-cache
+      shell: bash
+
+    - name: 💾 Restore Docker Build Cache
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+
+    - name: 🧼 Kill Conflicting MySQL Containers
+      run: |
+        docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
+      shell: bash
+
+    - name: 🏗️ Makefile Build (docker-compose)
+      run: |
+        echo "CI=${CI}"
+        make down || true
+        make build
+      shell: bash
+      env:
+        CI: true
+        DOCKER_BUILDKIT: 0
+
+    - name: ⏳ Wait for Services to Initialize
+      run: sleep 20
+      shell: bash
