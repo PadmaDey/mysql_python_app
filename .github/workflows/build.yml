@@ -16,6 +16,20 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
+      - name: 🔐 Write env/backend/.env
+        run: |
+          mkdir -p env/backend
+          echo "${{ secrets.BACKEND_ENV_FILE }}" > env/backend/.env
+
+      - name: 🔐 Write env/db/.env
+        run: |
+          mkdir -p env/db
+          echo "${{ secrets.MYSQL_ENV_DB }}" > env/db/.env
+
+      - name: 🔐 Write backend/.env for testing
+        run: |
+          echo "${{ secrets.TEST_ENV_FILE }}" > backend/.env
+
       - name: 🐳 Setup Docker
         uses: ./.github/actions/docker/setup
 
