@@ -11,13 +11,21 @@ build:
 	@echo "🐋 Starting MySQL container first..."
 	@$(COMPOSE_CMD) up --build --remove-orphans --detach mysql
 
-	@echo "⏳ Waiting up to 60s for MySQL to become healthy..."
-	@timeout 60s bash -c \
-		'until [ "$$(docker inspect --format="{{.State.Health.Status}}" db)" = "healthy" ]; do \
-			echo "⏱️  Waiting for DB..."; sleep 5; \
-		done'
+	@echo "⏳ Waiting up to 90s for MySQL to become healthy..."
+	@\
+	i=0; \
+	while [ "$$(docker inspect --format='{{.State.Health.Status}}' db)" != "healthy" ]; do \
+		if [ "$$i" -ge 18 ]; then \
+			echo "❌ DB healthcheck failed after 90s. Logs:"; \
+			docker logs db; \
+			exit 1; \
+		fi; \
+		echo "⏱️  Waiting for DB... ($$((i*5))s)"; \
+		sleep 5; \
+		i=$$((i+1)); \
+	done
 
-	@echo "🚀 Starting API container..."
+	@echo "✅ MySQL is healthy. Starting API..."
 	@$(COMPOSE_CMD) up --build --remove-orphans --detach api
 
 down:

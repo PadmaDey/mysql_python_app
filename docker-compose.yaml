@@ -3,7 +3,7 @@ services:
     image: mysql:8.4
     container_name: db
     ports:
-      - "3306:3306"  # MySQL default port
+      - "3306:3306"
     env_file:
       - ./env/db/.env
     volumes:
@@ -12,12 +12,14 @@ services:
       - my_app_net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-Klizos@123}"]
-      interval: 20s        # Wait longer between retries
-      timeout: 20s         # Allow more time per check
-      retries: 15          # Retry more times before giving up
-      start_period: 40s    # Initial grace period to allow MySQL to warm up
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s  # Enough time to fully initialize
 
+
+      
   api:
     build:
       context: backend
