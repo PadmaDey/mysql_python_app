@@ -1,34 +1,18 @@
 name: Setup Environment Files
 description: Create backend and DB .env files
-
 inputs:
   backend_env:
     required: true
-    description: Backend environment variables
   mysql_env:
     required: true
-    description: MySQL DB environment variables
   test_env:
     required: true
-    description: Test environment variables
-
 runs:
   using: "composite"
   steps:
-    - name: 📁 Create .env Files
-      run: |
-        set -e
-
+    - run: |
         mkdir -p env/backend env/db
-
-        echo "🔐 Writing backend .env"
-        printf "%s\n" "${{ inputs.backend_env }}" > env/backend/.env
-
-        echo "🗄️ Writing MySQL DB .env"
-        printf "%s\n" "${{ inputs.mysql_env }}" > env/db/.env
-
-        echo "🧪 Writing test .env"
-        printf "%s\n" "${{ inputs.test_env }}" > .env.test
-
-        echo "✅ Environment files created successfully."
+        echo "${{ inputs.backend_env }}" > env/backend/.env
+        echo "${{ inputs.mysql_env }}" > env/db/.env
+        echo "${{ inputs.test_env }}" > .env.test
       shell: bash

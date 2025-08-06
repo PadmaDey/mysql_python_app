@@ -21,15 +21,11 @@ runs:
     - uses: actions/cache@v4
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles(format('{0}', inputs.requirements_path)) }}
+        key: ${{ runner.os }}-pip-${{ hashFiles(inputs.requirements_path) }}
         restore-keys: |
           ${{ runner.os }}-pip-
 
     - run: |
         python -m pip install --upgrade pip
-        if [ -s "${{ inputs.requirements_path }}" ]; then
-          pip install -r "${{ inputs.requirements_path }}"
-        else
-          echo "⚠️ No requirements to install at ${{ inputs.requirements_path }}. Skipping pip install."
-        fi
+        pip install -r ${{ inputs.requirements_path }}
       shell: bash

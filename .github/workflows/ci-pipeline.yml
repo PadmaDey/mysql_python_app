@@ -7,7 +7,6 @@ on:
     branches: [new_branch]
   workflow_dispatch:
 
-# 🔐 Global permissions for reusable workflows like CodeQL
 permissions:
   actions: read
   contents: read
@@ -26,7 +25,7 @@ jobs:
     uses: ./.github/workflows/dependencies-scan.yml
 
   test:
-    name: 🧪 Run Unit Tests
+    name: 🦢 Run Unit Tests
     needs: dependencies-scan
     uses: ./.github/workflows/test.yml
     secrets: inherit
