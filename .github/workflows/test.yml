@@ -37,6 +37,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
+      - name: 🛠️ Initialize DB schema
+        run: python -c "import asyncio; from app.db import initialize_db; asyncio.run(initialize_db())"
+        working-directory: backend
+
       - name: 🧪 Run tests
         run: |
           echo "🔍 Running tests in: tests"
