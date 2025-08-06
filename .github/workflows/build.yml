@@ -16,15 +16,53 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      # 🐬 Start MySQL container with explicit environment variables
+      # 🔐 Inject backend env file
+      - name: 🔐 Write backend env file
+        run: |
+          mkdir -p env/backend
+          echo "PORT=8080" > env/backend/.env
+          echo "DEBUG=True" >> env/backend/.env
+          echo "MYSQL_DATABASE=user_info" >> env/backend/.env
+          echo "MYSQL_USER=emp_1" >> env/backend/.env
+          echo "MYSQL_PASSWORD=qwerty" >> env/backend/.env
+          echo "MYSQL_HOST=mysql" >> env/backend/.env
+          echo "MYSQL_PORT=3306" >> env/backend/.env
+          echo "SECRET_KEY=8J4U8p2YbDVCoBr7ZertqnnZJCJieGS1U3A0VohBY" >> env/backend/.env
+
+      # 🔐 Inject DB env file (used by Makefile/docker-compose)
+      - name: 🔐 Write DB env file
+        run: |
+          mkdir -p env/db
+          echo "MYSQL_ROOT_PASSWORD=Klizos@123" > env/db/.env
+          echo "MYSQL_DATABASE=user_info" >> env/db/.env
+          echo "MYSQL_USER=emp_1" >> env/db/.env
+          echo "MYSQL_PASSWORD=qwerty" >> env/db/.env
+
+      # 🔐 Inject test env file
+      - name: 🔐 Write test env file
+        run: |
+          echo "ENV=local" > .env.test
+          echo "SECRET_KEY=testsecretkey" >> .env.test
+          echo "MYSQL_HOST=localhost" >> .env.test
+          echo "MYSQL_PORT=3306" >> .env.test
+          echo "MYSQL_DATABASE=user_info" >> .env.test
+          echo "MYSQL_USER=emp_1" >> .env.test
+          echo "MYSQL_PASSWORD=qwerty" >> .env.test
+
+      # 🐬 Start MySQL container using injected values
       - name: 🐬 Start MySQL Container
+        env:
+          MYSQL_ROOT_PASSWORD: Klizos@123
+          MYSQL_DATABASE: user_info
+          MYSQL_USER: emp_1
+          MYSQL_PASSWORD: qwerty
         run: |
           docker run -d \
             --name mysql-container \
-            -e MYSQL_ROOT_PASSWORD=Klizos@123 \
-            -e MYSQL_DATABASE=user_info \
-            -e MYSQL_USER=emp_1 \
-            -e MYSQL_PASSWORD=qwerty \
+            -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
+            -e MYSQL_DATABASE=$MYSQL_DATABASE \
+            -e MYSQL_USER=$MYSQL_USER \
+            -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
             -p 3306:3306 \
             --health-cmd="mysqladmin ping -h localhost" \
             --health-interval=10s \
@@ -45,22 +83,13 @@ jobs:
             sleep 3
           done
 
-      # 🐳 Set up Docker context
+      # 🐳 Set up Docker build environment
       - name: 🐳 Setup Docker
         uses: ./.github/actions/docker/setup
 
-      # 🏗️ Build Docker image using Makefile logic
+      # 🏗️ Build Docker image
       - name: 🏗️ Build Docker Image
         uses: ./.github/actions/docker/build
-        env:
-          PORT: 8080
-          DEBUG: "True"
-          SECRET_KEY: 8J4U8p2YbDVCoBr7ZertqnnZJCJieGS1U3A0VohBY
-          MYSQL_HOST: mysql
-          MYSQL_PORT: "3306"
-          MYSQL_DATABASE: user_info
-          MYSQL_USER: emp_1
-          MYSQL_PASSWORD: qwerty
 
       # 🐋 Tag Docker image with provided input tag
       - name: 🐋 Tag Docker Image
@@ -79,7 +108,7 @@ jobs:
           name: docker-image-${{ inputs.image_tag }}
           path: backend-api-${{ inputs.image_tag }}.tar
 
-      # 🧹 Clean up MySQL container to avoid resource leaks
+      # 🧹 Clean up MySQL container
       - name: 🧹 Clean Up MySQL Container
         if: always()
         run: docker rm -f mysql-container || true
