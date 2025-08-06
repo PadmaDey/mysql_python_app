@@ -7,7 +7,7 @@ runs:
     - name: 🔧 Setup Docker Buildx
       uses: docker/setup-buildx-action@v3
 
-    - name: 📦 Install Docker Compose CLI (v2)
+    - name: Install Docker Compose CLI (v2)
       run: |
         sudo apt-get update
         sudo apt-get install -y docker-compose

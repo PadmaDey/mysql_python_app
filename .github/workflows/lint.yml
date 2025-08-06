@@ -2,30 +2,29 @@ name: Python Lint & Test
 
 on:
   workflow_call:  
-  # Allows this to be reused via `uses:` in other workflows
 
 
 jobs:
   lint:
-    name: 🧹 Lint Python Code
+    name: Lint Python Code
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: 📦 Install dependencies and flake8
+      - name: Install dependencies and flake8
         run: |
           python -m pip install --upgrade pip
           pip install flake8
           pip install -r backend/requirements.txt || true
 
-      - name: 🔍 Run flake8 checks
+      - name: Run flake8 checks
         run: |
           echo "Strict errors:"
           flake8 backend --count --select=E9,F63,F7,F82 --show-source --statistics

@@ -9,11 +9,11 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: 📁 Ensure Build Cache Directory Exists
+    - name: Ensure Build Cache Directory Exists
       run: mkdir -p /tmp/.buildx-cache
       shell: bash
 
-    - name: 💾 Restore Docker Build Cache
+    - name: Restore Docker Build Cache
       uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache
@@ -21,12 +21,12 @@ runs:
         restore-keys: |
           ${{ runner.os }}-buildx-
 
-    - name: 🧼 Kill Conflicting MySQL Containers
+    - name: Kill Conflicting MySQL Containers
       run: |
         docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
       shell: bash
 
-    - name: 🏗️ Build Docker Image with Optional Tag
+    - name: Build Docker Image with Optional Tag
       run: |
         echo "CI=${CI}"
         make down || true
@@ -35,14 +35,14 @@ runs:
         IMAGE_ID=$(docker images -q | head -n 1)
         if [ -n "$IMAGE_ID" ]; then
           docker tag "$IMAGE_ID" backend-api:latest
-          echo "✅ Tagged $IMAGE_ID as backend-api:latest"
+          echo "Tagged $IMAGE_ID as backend-api:latest"
 
           if [ -n "${{ inputs.image_tag }}" ]; then
             docker tag "$IMAGE_ID" backend-api:${{ inputs.image_tag }}
-            echo "✅ Also tagged as backend-api:${{ inputs.image_tag }}"
+            echo "Also tagged as backend-api:${{ inputs.image_tag }}"
           fi
         else
-          echo "❌ No image found to tag"
+          echo "No image found to tag"
           exit 1
         fi
       shell: bash
@@ -50,10 +50,10 @@ runs:
         CI: true
         DOCKER_BUILDKIT: 0
 
-    - name: 🐳 List Docker Images (Debug)
+    - name: List Docker Images (Debug)
       run: docker images
       shell: bash
 
-    - name: ⏳ Wait for Services to Initialize
+    - name: Wait for Services to Initialize
       run: sleep 20
       shell: bash

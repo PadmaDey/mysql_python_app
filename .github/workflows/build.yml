@@ -1,4 +1,4 @@
-name: 🏗️ Reusable Docker Build Workflow
+name: Reusable Docker Build Workflow
 
 on:
   workflow_call:
@@ -13,11 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout Repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 🔐 Inject backend env file
-      - name: 🔐 Write backend env file
+      # Inject backend env file
+      - name: Write backend env file
         run: |
           mkdir -p env/backend
           cat <<EOF > env/backend/.env
@@ -31,8 +31,8 @@ jobs:
           SECRET_KEY=8J4U8p2YbDVCoBr7ZertqnnZJCJieGS1U3A0VohBY
           EOF
 
-      # 🔐 Inject DB env file (used by Makefile/docker-compose)
-      - name: 🔐 Write DB env file
+      # Inject DB env file (used by Makefile/docker-compose)
+      - name: Write DB env file
         run: |
           mkdir -p env/db
           cat <<EOF > env/db/.env
@@ -42,8 +42,8 @@ jobs:
           MYSQL_PASSWORD=qwerty
           EOF
 
-      # 🔐 Inject test env file
-      - name: 🔐 Write test env file
+      # Inject test env file
+      - name: Write test env file
         run: |
           cat <<EOF > .env.test
           ENV=local
@@ -55,8 +55,8 @@ jobs:
           MYSQL_PASSWORD=qwerty
           EOF
 
-      # 🐬 Start MySQL container using injected values
-      - name: 🐬 Start MySQL Container
+      # Start MySQL container using injected values
+      - name: Start MySQL Container
         env:
           MYSQL_ROOT_PASSWORD: Klizos@123
           MYSQL_DATABASE: user_info
@@ -76,42 +76,42 @@ jobs:
             --health-retries=10 \
             mysql:latest
 
-      # 💤 Wait until MySQL container becomes healthy
-      - name: 💤 Wait for MySQL to be healthy
+      # Wait until MySQL container becomes healthy
+      - name: Wait for MySQL to be healthy
         run: |
           for i in {1..30}; do
             STATUS=$(docker inspect --format='{{json .State.Health.Status}}' mysql-container)
             if [[ "$STATUS" == "\"healthy\"" ]]; then
-              echo "✅ MySQL is healthy"
+              echo "MySQL is healthy"
               break
             fi
-            echo "⌛ Waiting for MySQL... ($i/30)"
+            echo "Waiting for MySQL... ($i/30)"
             sleep 3
           done
 
-      # 🐳 Set up Docker build environment
-      - name: 🐳 Setup Docker
+      # Set up Docker build environment
+      - name: Setup Docker
         uses: ./.github/actions/docker/setup
 
-      # 🏗️ Build Docker image with tag from input
-      - name: 🏗️ Build Docker Image
+      # Build Docker image with tag from input
+      - name: Build Docker Image
         uses: ./.github/actions/docker/build
         with:
           image_tag: ${{ inputs.image_tag }}
 
-      # 📦 Save Docker image as tarball
-      - name: 📦 Save Docker Image to Tarball
+      # Save Docker image as tarball
+      - name: Save Docker Image to Tarball
         run: |
           docker save backend-api:${{ inputs.image_tag }} -o backend-api-${{ inputs.image_tag }}.tar
 
-      # ⬆️ Upload Docker image artifact
-      - name: ⬆️ Upload Docker Image Artifact
+      # Upload Docker image artifact
+      - name: Upload Docker Image Artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-${{ inputs.image_tag }}
           path: backend-api-${{ inputs.image_tag }}.tar
 
-      # 🧹 Clean up MySQL container
-      - name: 🧹 Clean Up MySQL Container
+      # Clean up MySQL container
+      - name: Clean Up MySQL Container
         if: always()
         run: docker rm -f mysql-container || true

@@ -1,4 +1,4 @@
-name: 🧪 Full CI Pipeline
+name: Full CI Pipeline
 
 on:
   push:
@@ -25,20 +25,20 @@ jobs:
     uses: ./.github/workflows/dependencies-scan.yml
 
   test:
-    name: 🦢 Run Unit Tests
+    name: Run Unit Tests
     needs: dependencies-scan
     uses: ./.github/workflows/test.yml
     secrets: inherit
 
   build:
-    name: 🏗️ Build Docker Image
+    name: Build Docker Image
     needs: test
     uses: ./.github/workflows/build.yml
     with:
       image_tag: dev-${{ github.sha }}
 
   scan:
-    name: 🔍 Docker Vulnerability Scan
+    name: Docker Vulnerability Scan
     needs: build
     uses: ./.github/workflows/scan.yml
     with:

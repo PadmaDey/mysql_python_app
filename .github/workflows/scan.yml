@@ -1,4 +1,4 @@
-name: 🛡️ Docker Image Vulnerability Scan
+name: Docker Image Vulnerability Scan
 
 on:
   workflow_call:
@@ -18,28 +18,28 @@ on:
 
 jobs:
   trivy-scan:
-    name: 🔍 Trivy Image Vulnerability Scan
+    name: Trivy Image Vulnerability Scan
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Install Trivy
+      - name: Install Trivy
         run: |
           sudo apt-get update
           sudo apt-get install -y wget
           wget https://github.com/aquasecurity/trivy/releases/download/v0.64.1/trivy_0.64.1_Linux-64bit.deb
           sudo dpkg -i trivy_0.64.1_Linux-64bit.deb
 
-      - name: 📦 Download Docker Image Artifact
+      - name: Download Docker Image Artifact
         uses: actions/download-artifact@v4
         with:
           name: docker-image-${{ inputs.image_tag }}
 
-      - name: 🐳 Load Docker Image
+      - name: Load Docker Image
         run: |
           echo "Loading Docker image: ${{ inputs.image }}-${{ inputs.image_tag }}"
           docker load -i ${{ inputs.image }}-${{ inputs.image_tag }}.tar
 
-      - name: 🛡️ Scan Image with Trivy
+      - name: Scan Image with Trivy
         continue-on-error: true
         uses: aquasecurity/trivy-action@master
         with:
@@ -51,7 +51,7 @@ jobs:
           output: trivy-report.txt
           exit-code: 0  # prevent job failure even if vulnerabilities are found
 
-      - name: 📤 Upload Trivy Scan Report
+      - name: Upload Trivy Scan Report
         if: always()
         uses: actions/upload-artifact@v4
         with:
