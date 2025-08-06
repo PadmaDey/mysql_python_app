@@ -1,35 +1,60 @@
-name: 🧪 Unit Test Workflow
+name: 🧪 Unit Tests
 
 on:
   workflow_call:
 
 jobs:
-  test:
-    name: 🧪 Run Unit Tests
+  run-tests:
     runs-on: ubuntu-latest
 
+    services:
+      db:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: Klizos@123
+          MYSQL_DATABASE: user_info
+          MYSQL_USER: emp_1
+          MYSQL_PASSWORD: qwerty
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
-      - name: 📥 Checkout Code
+      - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 📂 Setup Environment
-        uses: ./.github/actions/env/setup
+      - name: 🐍 Set up Python 3.12
+        uses: actions/setup-python@v5
         with:
-          backend_env: ${{ inputs.backend_env }}
-          mysql_env: ${{ inputs.mysql_env }}
-          test_env: ${{ inputs.test_env }}
+          python-version: "3.12"
 
-      - name: 🐳 Setup Docker
-        uses: ./.github/actions/docker/setup
-
-      - name: 🏗️ Build Container for Testing
-        run: make build
+      - name: 💾 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
 
       - name: 💤 Wait for DB to settle
-        run: sleep 20
+        run: |
+          echo "⏳ Waiting up to 60s for MySQL to become healthy..."
+          for i in {1..12}; do
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' $(docker ps -qf "name=db"))
+            if [ "$$STATUS" = "healthy" ]; then
+              echo "✅ DB is healthy!"
+              break
+            fi
+            echo "⏱️  Waiting for DB..."
+            sleep 5
+          done
 
-      - name: 🐍 Setup Python
-        uses: ./.github/actions/python/setup
+      - name: 🧪 Run tests
+        run: |
+          echo "🔍 Running tests in: tests"
+          pytest tests
 
-      - name: 🧪 Run Tests
-        uses: ./.github/actions/python/run-tests
+      - name: 🧹 Clean up (Optional)
+        if: always()
+        run: docker container prune -f
