@@ -40,11 +40,29 @@ jobs:
       - name: 🛠️ Initialize DB schema
         run: python -c "import asyncio; from app.db import initialize_db; asyncio.run(initialize_db())"
         working-directory: backend
+        env:
+          PYTHONPATH: backend
+          ENV: local
+          SECRET_KEY: testsecretkey
+          MYSQL_HOST: localhost
+          MYSQL_PORT: "3306"
+          MYSQL_DATABASE: user_info
+          MYSQL_USER: emp_1
+          MYSQL_PASSWORD: qwerty
 
       - name: 🧪 Run tests
         run: |
           echo "🔍 Running tests in: tests"
           pytest tests
+        env:
+          PYTHONPATH: backend
+          ENV: local
+          SECRET_KEY: testsecretkey
+          MYSQL_HOST: localhost
+          MYSQL_PORT: "3306"
+          MYSQL_DATABASE: user_info
+          MYSQL_USER: emp_1
+          MYSQL_PASSWORD: qwerty
 
       - name: 🧹 Clean up (Optional)
         if: always()
