@@ -37,19 +37,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      # - name: 💤 Wait for DB to settle
-      #   run: |
-      #     echo "⏳ Waiting up to 60s for MySQL to become healthy..."
-      #     for i in {1..12}; do
-      #       STATUS=$(docker inspect --format='{{.State.Health.Status}}' $(docker ps -qf "name=db"))
-      #       if [ "$$STATUS" = "healthy" ]; then
-      #         echo "✅ DB is healthy!"
-      #         break
-      #       fi
-      #       echo "⏱️  Waiting for DB..."
-      #       sleep 5
-      #     done
-
       - name: 🧪 Run tests
         run: |
           echo "🔍 Running tests in: tests"
