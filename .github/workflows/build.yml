@@ -16,37 +16,15 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      # 🔐 Inject backend env variables from secret
-      - name: 🔐 Write backend env file
-        run: |
-          mkdir -p env/backend
-          echo "${{ secrets.BACKEND_ENV_FILE }}" > env/backend/.env
-
-      # 🔐 Inject DB env variables from secret
-      - name: 🔐 Write DB env file
-        run: |
-          mkdir -p env/db
-          echo "${{ secrets.DB_ENV_FILE }}" > env/db/.env
-
-      # 🔐 Inject test env variables from secret
-      - name: 🔐 Write test env file
-        run: |
-          echo "${{ secrets.TEST_ENV_FILE }}" > .env.test
-
-      # 🐬 Start MySQL container using secret values
+      # 🐬 Start MySQL container with explicit environment variables
       - name: 🐬 Start MySQL Container
-        env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE: user_info
-          MYSQL_USER: emp_1
-          MYSQL_PASSWORD: qwerty
         run: |
           docker run -d \
             --name mysql-container \
-            -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
-            -e MYSQL_DATABASE=$MYSQL_DATABASE \
-            -e MYSQL_USER=$MYSQL_USER \
-            -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
+            -e MYSQL_ROOT_PASSWORD=Klizos@123 \
+            -e MYSQL_DATABASE=user_info \
+            -e MYSQL_USER=emp_1 \
+            -e MYSQL_PASSWORD=qwerty \
             -p 3306:3306 \
             --health-cmd="mysqladmin ping -h localhost" \
             --health-interval=10s \
@@ -74,6 +52,15 @@ jobs:
       # 🏗️ Build Docker image using Makefile logic
       - name: 🏗️ Build Docker Image
         uses: ./.github/actions/docker/build
+        env:
+          PORT: 8080
+          DEBUG: "True"
+          SECRET_KEY: 8J4U8p2YbDVCoBr7ZertqnnZJCJieGS1U3A0VohBY
+          MYSQL_HOST: mysql
+          MYSQL_PORT: "3306"
+          MYSQL_DATABASE: user_info
+          MYSQL_USER: emp_1
+          MYSQL_PASSWORD: qwerty
 
       # 🐋 Tag Docker image with provided input tag
       - name: 🐋 Tag Docker Image
