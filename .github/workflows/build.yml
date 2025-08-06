@@ -16,30 +16,37 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      # 🔐 Inject environment variables from GitHub Secrets
+      # 🔐 Inject backend env variables from secret
       - name: 🔐 Write backend env file
         run: |
           mkdir -p env/backend
           echo "${{ secrets.BACKEND_ENV_FILE }}" > env/backend/.env
 
+      # 🔐 Inject DB env variables from secret
       - name: 🔐 Write DB env file
         run: |
           mkdir -p env/db
-          echo "${{ secrets.MYSQL_ENV_DB }}" > env/db/.env
+          echo "${{ secrets.DB_ENV_FILE }}" > env/db/.env
 
+      # 🔐 Inject test env variables from secret
       - name: 🔐 Write test env file
         run: |
           echo "${{ secrets.TEST_ENV_FILE }}" > .env.test
 
-      # 🐬 Start MySQL container manually
+      # 🐬 Start MySQL container using secret values
       - name: 🐬 Start MySQL Container
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: user_info
+          MYSQL_USER: emp_1
+          MYSQL_PASSWORD: qwerty
         run: |
           docker run -d \
             --name mysql-container \
-            -e MYSQL_ROOT_PASSWORD=Klizos@123 \
-            -e MYSQL_DATABASE=user_info \
-            -e MYSQL_USER=emp_1 \
-            -e MYSQL_PASSWORD=qwerty \
+            -e MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD \
+            -e MYSQL_DATABASE=$MYSQL_DATABASE \
+            -e MYSQL_USER=$MYSQL_USER \
+            -e MYSQL_PASSWORD=$MYSQL_PASSWORD \
             -p 3306:3306 \
             --health-cmd="mysqladmin ping -h localhost" \
             --health-interval=10s \
@@ -47,7 +54,7 @@ jobs:
             --health-retries=10 \
             mysql:latest
 
-      # 💤 Wait until MySQL container is healthy
+      # 💤 Wait until MySQL container becomes healthy
       - name: 💤 Wait for MySQL to be healthy
         run: |
           for i in {1..30}; do
@@ -60,32 +67,32 @@ jobs:
             sleep 3
           done
 
-      # 🐳 Setup Docker build environment
+      # 🐳 Set up Docker context
       - name: 🐳 Setup Docker
         uses: ./.github/actions/docker/setup
 
-      # 🏗️ Build Docker image
-      - name: 🏗️ Build Docker Image (via Makefile)
+      # 🏗️ Build Docker image using Makefile logic
+      - name: 🏗️ Build Docker Image
         uses: ./.github/actions/docker/build
 
-      # 🐋 Tag Docker image
-      - name: 🐋 Tag Built Docker Image
+      # 🐋 Tag Docker image with provided input tag
+      - name: 🐋 Tag Docker Image
         run: |
           docker tag backend-api:latest backend-api:${{ inputs.image_tag }}
 
-      # 📦 Save image as tarball
+      # 📦 Save Docker image as tarball
       - name: 📦 Save Docker Image to Tarball
         run: |
           docker save backend-api:${{ inputs.image_tag }} -o backend-api-${{ inputs.image_tag }}.tar
 
-      # ⬆️ Upload image artifact
+      # ⬆️ Upload Docker image artifact
       - name: ⬆️ Upload Docker Image Artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-${{ inputs.image_tag }}
           path: backend-api-${{ inputs.image_tag }}.tar
 
-      # 🧹 Optional cleanup
-      - name: 🧹 Clean up MySQL container
+      # 🧹 Clean up MySQL container to avoid resource leaks
+      - name: 🧹 Clean Up MySQL Container
         if: always()
         run: docker rm -f mysql-container || true
