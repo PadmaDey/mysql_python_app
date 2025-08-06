@@ -1,6 +1,11 @@
 name: Build Docker Images
 description: Build Docker images using Makefile and clean up MySQL conflicts
 
+inputs:
+  image_tag:
+    description: Custom image tag to apply (e.g., dev-213...)
+    required: false
+
 runs:
   using: "composite"
   steps:
@@ -21,17 +26,21 @@ runs:
         docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
       shell: bash
 
-    - name: 🏗️ Build Docker Image with Tag
+    - name: 🏗️ Build Docker Image with Optional Tag
       run: |
         echo "CI=${CI}"
         make down || true
         make build
 
-        # Explicitly tag the latest built image as backend-api:latest
         IMAGE_ID=$(docker images -q | head -n 1)
         if [ -n "$IMAGE_ID" ]; then
           docker tag "$IMAGE_ID" backend-api:latest
-          echo "✅ Tagged image $IMAGE_ID as backend-api:latest"
+          echo "✅ Tagged $IMAGE_ID as backend-api:latest"
+
+          if [ -n "${{ inputs.image_tag }}" ]; then
+            docker tag "$IMAGE_ID" backend-api:${{ inputs.image_tag }}
+            echo "✅ Also tagged as backend-api:${{ inputs.image_tag }}"
+          fi
         else
           echo "❌ No image found to tag"
           exit 1
