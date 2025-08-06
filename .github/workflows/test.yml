@@ -14,7 +14,6 @@ jobs:
 
       - name: 📂 Setup Environment
         uses: ./.github/actions/env/setup
-
         with:
           backend_env: ${{ inputs.backend_env }}
           mysql_env: ${{ inputs.mysql_env }}
@@ -25,6 +24,9 @@ jobs:
 
       - name: 🏗️ Build Container for Testing
         run: make build
+
+      - name: 💤 Wait for DB to settle
+        run: sleep 20
 
       - name: 🐍 Setup Python
         uses: ./.github/actions/python/setup
