@@ -16,22 +16,26 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: 🔐 Write env/backend/.env
+      # Inject environment variables from GitHub Secrets
+      - name: 🔐 Write backend env file
         run: |
           mkdir -p env/backend
           echo "${{ secrets.BACKEND_ENV_FILE }}" > env/backend/.env
 
-      - name: 🔐 Write env/db/.env
+      - name: 🔐 Write DB env file
         run: |
           mkdir -p env/db
           echo "${{ secrets.MYSQL_ENV_DB }}" > env/db/.env
 
-      - name: 🔐 Write backend/.env for testing
+      - name: 🔐 Write test env file
         run: |
-          echo "${{ secrets.TEST_ENV_FILE }}" > backend/.env
+          echo "${{ secrets.TEST_ENV_FILE }}" > .env.test
 
       - name: 🐳 Setup Docker
         uses: ./.github/actions/docker/setup
+
+      - name: 💤 Wait for DB to settle
+        run: sleep 20
 
       - name: 🏗️ Build Docker Image (via Makefile)
         uses: ./.github/actions/docker/build
@@ -39,12 +43,10 @@ jobs:
       - name: 🐋 Tag Built Docker Image
         run: |
           docker tag backend-api:latest backend-api:${{ inputs.image_tag }}
-        shell: bash
 
       - name: 📦 Save Docker Image to Tarball
         run: |
           docker save backend-api:${{ inputs.image_tag }} -o backend-api-${{ inputs.image_tag }}.tar
-        shell: bash
 
       - name: ⬆️ Upload Docker Image Artifact
         uses: actions/upload-artifact@v4
