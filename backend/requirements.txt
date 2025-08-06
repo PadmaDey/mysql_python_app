@@ -1,49 +1,46 @@
-annotated-types==0.7.0
-anyio==4.9.0
-# bcrypt==4.3.0
-bcrypt==4.0.1
-black==25.1.0
-# click==8.2.1
-click<8.2,>=8.0.0
-colorama==0.4.6
-fastapi==0.115.12
-h11==0.16.0
-idna==3.10
-# isort==6.0.1
-mypy_extensions==1.1.0
-# mysql-connector==2.2.9
-packaging==25.0
-passlib==1.7.4
-pathspec==0.12.1
-platformdirs==4.3.8
-pydantic==2.11.4
-pydantic-settings==2.9.1
-pydantic_core==2.33.2
-python-dotenv==1.1.0
-setuptools==78.1.1
-sniffio==1.3.1
-starlette==0.46.2
-typing-inspection==0.4.1
-typing_extensions==4.13.2
-uvicorn==0.34.2
-wheel==0.45.1
-
-pymysql
-mysql-connector-python
-
-
-uvicorn[standard]
+# Core runtime dependencies
+fastapi>=0.111.0          # Supports Starlette >=0.47.2
+starlette>=0.47.2         # CVE-fixed version (GHSA-2c2j-9gv5-cj73)
+uvicorn[standard]==0.34.2
 python-multipart
 python-jose[cryptography]
 passlib[bcrypt]
-pydantic[email]
-asyncmy 
-sqlalchemy[asyncio]
+pydantic[email]>=2.11.4
+pydantic-settings==2.9.1
+sqlalchemy[asyncio]==2.0.42
+asyncmy
+mysql-connector-python
+pymysql
+python-dotenv==1.1.0
+typing-inspection==0.4.1
+typing_extensions==4.13.2
+setuptools>=78.1.1
+wheel>=0.45.1
+colorama==0.4.6
+anyio==4.9.0
+h11==0.16.0
+idna==3.10
+annotated-types==0.7.0
+platformdirs==4.3.8
+packaging==25.0
 
-pytest 
-requests-mock
-pytest-mock 
+# Dev and Tooling
+black==25.1.0
+click<8.2,>=8.0.0
+mypy_extensions==1.1.0
+pathspec==0.12.1
+
+# Testing
+pytest
 pytest-asyncio
-httpx
 pytest-dotenv
-# alembic
+pytest-mock
+requests-mock
+httpx
+
+# Security tools (optional, for audit pipeline)
+pip-audit
+bandit
+
+# Security patches
+ecdsa==0.18.0
