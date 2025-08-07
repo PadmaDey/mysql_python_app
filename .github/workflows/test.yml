@@ -1,4 +1,4 @@
-name: Unit Tests
+name: Py Tests
 
 on:
   workflow_call:
