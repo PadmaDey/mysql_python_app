@@ -7,10 +7,10 @@ on:
     branches: [new_branch]
   workflow_dispatch:
 
-# permissions:
-#   actions: read
-#   contents: read
-#   security-events: write
+permissions:
+  actions: read
+  contents: read
+  security-events: write
 
 jobs:
   lint:
