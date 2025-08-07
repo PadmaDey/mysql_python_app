@@ -1,7 +1,31 @@
 name: Python Backend Tests
 
 on:
-  workflow_call: 
+  workflow_call:
+    secrets:
+      BACKEND_PORT:
+        required: true
+      BACKEND_DEBUG:
+        required: true
+      DB_MYSQL_ROOT_PASSWORD:
+        required: true
+      DB_MYSQL_DATABASE:
+        required: true
+      DB_MYSQL_USER:
+        required: true
+      DB_MYSQL_PASSWORD:
+        required: true
+      BACKEND_SECRET_KEY:
+        required: true
+      TEST_MYSQL_HOST:
+        required: false
+      TEST_MYSQL_PORT:
+        required: false
+      TEST_ENV:
+        required: false
+      TEST_SECRET_KEY:
+        required: false
+
 
 jobs:
   run-tests:
