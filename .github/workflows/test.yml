@@ -18,19 +18,18 @@ on:
       BACKEND_SECRET_KEY:
         required: true
       TEST_MYSQL_HOST:
-        required: false
+        required: true
       TEST_MYSQL_PORT:
-        required: false
+        required: true
       TEST_ENV:
-        required: false
+        required: true
       TEST_SECRET_KEY:
-        required: false
+        required: true
 
 jobs:
   run-tests:
     runs-on: ubuntu-latest
 
-    # Set env at job level so it's accessible in services/env
     env:
       MYSQL_ROOT_PASSWORD: ${{ secrets.DB_MYSQL_ROOT_PASSWORD }}
       MYSQL_DATABASE: ${{ secrets.DB_MYSQL_DATABASE }}
@@ -67,7 +66,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Export environment variables
+      - name: Export environment variables to GITHUB_ENV
         run: |
           echo "PORT=${{ secrets.BACKEND_PORT }}" >> $GITHUB_ENV
           echo "DEBUG=${{ secrets.BACKEND_DEBUG }}" >> $GITHUB_ENV
@@ -81,14 +80,18 @@ jobs:
           echo "TEST_SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}" >> $GITHUB_ENV
           echo "PYTHONPATH=backend" >> $GITHUB_ENV
 
-      - name: Set default values for optional env vars
-        run: |
-          echo "MYSQL_HOST=${MYSQL_HOST:-localhost}" >> $GITHUB_ENV
-          echo "MYSQL_PORT=${MYSQL_PORT:-3306}" >> $GITHUB_ENV
-
-      - name: Initialize database schema
-        run: python scripts/init_db.py
+      - name: Initialize DB schema
+        run: python -c "import asyncio; from app.db import initialize_db; asyncio.run(initialize_db())"
         working-directory: backend
+        env:
+          PYTHONPATH: backend
+          ENV: ${{ secrets.TEST_ENV }}
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+          MYSQL_HOST: ${{ secrets.TEST_MYSQL_HOST }}
+          MYSQL_PORT: ${{ secrets.TEST_MYSQL_PORT }}
+          MYSQL_DATABASE: ${{ secrets.DB_MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.DB_MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_MYSQL_PASSWORD }}
 
       - name: Run tests
         run: pytest tests
