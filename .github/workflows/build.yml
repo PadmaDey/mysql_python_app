@@ -7,7 +7,47 @@ on:
         description: Tag to apply to the Docker image
         required: true
         type: string
-    secrets: inherit
+    secrets:
+      BACKEND_PORT:
+        required: true
+      BACKEND_DEBUG:
+        required: true
+      BACKEND_MYSQL_DATABASE:
+        required: true
+      BACKEND_MYSQL_USER:
+        required: true
+      BACKEND_MYSQL_PASSWORD:
+        required: true
+      BACKEND_MYSQL_HOST:
+        required: true
+      BACKEND_MYSQL_PORT:
+        required: true
+      BACKEND_SECRET_KEY:
+        required: true
+
+      DB_MYSQL_ROOT_PASSWORD:
+        required: true
+      DB_MYSQL_DATABASE:
+        required: true
+      DB_MYSQL_USER:
+        required: true
+      DB_MYSQL_PASSWORD:
+        required: true
+
+      TEST_ENV:
+        required: false
+      TEST_SECRET_KEY:
+        required: false
+      TEST_MYSQL_HOST:
+        required: false
+      TEST_MYSQL_PORT:
+        required: false
+      TEST_MYSQL_DATABASE:
+        required: false
+      TEST_MYSQL_USER:
+        required: false
+      TEST_MYSQL_PASSWORD:
+        required: false
 
 jobs:
   build:
@@ -17,7 +57,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Inject backend env file from GitHub secrets
       - name: Write backend env file
         run: |
           mkdir -p env/backend
@@ -30,8 +69,6 @@ jobs:
           echo "MYSQL_PORT=${{ secrets.BACKEND_MYSQL_PORT }}" >> env/backend/.env
           echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> env/backend/.env
 
-
-      # Inject DB env file
       - name: Write DB env file
         run: |
           mkdir -p env/db
@@ -40,7 +77,6 @@ jobs:
           echo "MYSQL_USER=${{ secrets.DB_MYSQL_USER }}" >> env/db/.env
           echo "MYSQL_PASSWORD=${{ secrets.DB_MYSQL_PASSWORD }}" >> env/db/.env
 
-      # Inject test env file
       - name: Write test env file
         run: |
           echo "ENV=${{ secrets.TEST_ENV }}" >> .env.test
@@ -51,7 +87,6 @@ jobs:
           echo "MYSQL_USER=${{ secrets.TEST_MYSQL_USER }}" >> .env.test
           echo "MYSQL_PASSWORD=${{ secrets.TEST_MYSQL_PASSWORD }}" >> .env.test
 
-      # Start MySQL container
       - name: Start MySQL Container
         env:
           MYSQL_ROOT_PASSWORD: ${{ secrets.DB_MYSQL_ROOT_PASSWORD }}
@@ -72,7 +107,6 @@ jobs:
             --health-retries=10 \
             mysql:latest
 
-      # Wait until MySQL container becomes healthy
       - name: Wait for MySQL to be healthy
         run: |
           for i in {1..30}; do
@@ -85,29 +119,24 @@ jobs:
             sleep 3
           done
 
-      # Set up Docker build environment
       - name: Setup Docker
         uses: ./.github/actions/docker/setup
 
-      # Build Docker image with tag from input
       - name: Build Docker Image
         uses: ./.github/actions/docker/build
         with:
           image_tag: ${{ inputs.image_tag }}
 
-      # Save Docker image as tarball
       - name: Save Docker Image to Tarball
         run: |
           docker save backend-api:${{ inputs.image_tag }} -o backend-api-${{ inputs.image_tag }}.tar
 
-      # Upload Docker image artifact
       - name: Upload Docker Image Artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-image-${{ inputs.image_tag }}
           path: backend-api-${{ inputs.image_tag }}.tar
 
-      # Clean up MySQL container
       - name: Clean Up MySQL Container
         if: always()
         run: docker rm -f mysql-container || true
