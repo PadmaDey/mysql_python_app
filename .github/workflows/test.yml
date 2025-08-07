@@ -26,7 +26,6 @@ on:
       TEST_SECRET_KEY:
         required: false
 
-
 jobs:
   run-tests:
     runs-on: ubuntu-latest
@@ -68,12 +67,18 @@ jobs:
           echo "MYSQL_DATABASE=${{ secrets.DB_MYSQL_DATABASE }}" >> $GITHUB_ENV
           echo "MYSQL_USER=${{ secrets.DB_MYSQL_USER }}" >> $GITHUB_ENV
           echo "MYSQL_PASSWORD=${{ secrets.DB_MYSQL_PASSWORD }}" >> $GITHUB_ENV
-          echo "MYSQL_HOST=${{ secrets.TEST_MYSQL_HOST || 'localhost' }}" >> $GITHUB_ENV
-          echo "MYSQL_PORT=${{ secrets.TEST_MYSQL_PORT || '3306' }}" >> $GITHUB_ENV
+          echo "MYSQL_HOST=${{ secrets.TEST_MYSQL_HOST }}" >> $GITHUB_ENV
+          echo "MYSQL_PORT=${{ secrets.TEST_MYSQL_PORT }}" >> $GITHUB_ENV
           echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> $GITHUB_ENV
           echo "ENV=${{ secrets.TEST_ENV }}" >> $GITHUB_ENV
           echo "TEST_SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}" >> $GITHUB_ENV
           echo "PYTHONPATH=backend" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Set default values for optional env vars (fallbacks)
+        run: |
+          echo "MYSQL_HOST=${MYSQL_HOST:-localhost}" >> $GITHUB_ENV
+          echo "MYSQL_PORT=${MYSQL_PORT:-3306}" >> $GITHUB_ENV
 
       - name: Initialize database schema
         run: python scripts/init_db.py
