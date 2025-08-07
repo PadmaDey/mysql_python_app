@@ -25,7 +25,7 @@ jobs:
     uses: ./.github/workflows/dependencies-scan.yml
 
   test:
-    name: Run Unit Tests
+    name: Run Py Tests
     needs: dependencies-scan
     uses: ./.github/workflows/test.yml
     secrets: inherit

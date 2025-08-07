@@ -11,10 +11,10 @@ jobs:
       db:
         image: mysql:latest
         env:
-          MYSQL_ROOT_PASSWORD: Klizos@123
-          MYSQL_DATABASE: user_info
-          MYSQL_USER: emp_1
-          MYSQL_PASSWORD: qwerty
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}  # From parsed DB_ENV_FILE
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
@@ -27,6 +27,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Load TEST_ENV_FILE from GitHub Secrets
+        run: |
+          echo "${{ secrets.TEST_ENV_FILE }}" >> $GITHUB_ENV
+
+      - name: Load DB_ENV_FILE from GitHub Secrets (MySQL runtime secrets)
+        run: |
+          echo "${{ secrets.DB_ENV_FILE }}" >> $GITHUB_ENV
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
@@ -38,17 +46,18 @@ jobs:
           pip install -r backend/requirements.txt
 
       - name: Initialize DB schema
-        run: python -c "import asyncio; from app.db import initialize_db; asyncio.run(initialize_db())"
+        run: |
+          python -c "import asyncio; from app.db import initialize_db; asyncio.run(initialize_db())"
         working-directory: backend
         env:
           PYTHONPATH: backend
-          ENV: local
-          SECRET_KEY: testsecretkey
-          MYSQL_HOST: localhost
-          MYSQL_PORT: "3306"
-          MYSQL_DATABASE: user_info
-          MYSQL_USER: emp_1
-          MYSQL_PASSWORD: qwerty
+          ENV: ${{ env.ENV }}
+          SECRET_KEY: ${{ env.SECRET_KEY }}
+          MYSQL_HOST: ${{ env.MYSQL_HOST }}
+          MYSQL_PORT: ${{ env.MYSQL_PORT }}
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
 
       - name: Run tests
         run: |
@@ -56,14 +65,14 @@ jobs:
           pytest tests
         env:
           PYTHONPATH: backend
-          ENV: local
-          SECRET_KEY: testsecretkey
-          MYSQL_HOST: localhost
-          MYSQL_PORT: "3306"
-          MYSQL_DATABASE: user_info
-          MYSQL_USER: emp_1
-          MYSQL_PASSWORD: qwerty
+          ENV: ${{ env.ENV }}
+          SECRET_KEY: ${{ env.SECRET_KEY }}
+          MYSQL_HOST: ${{ env.MYSQL_HOST }}
+          MYSQL_PORT: ${{ env.MYSQL_PORT }}
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
 
-      - name: Clean up (Optional)
+      - name: Clean up (optional)
         if: always()
         run: docker container prune -f
