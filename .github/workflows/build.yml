@@ -7,6 +7,7 @@ on:
         description: Tag to apply to the Docker image
         required: true
         type: string
+    secrets: inherit
 
 jobs:
   build:

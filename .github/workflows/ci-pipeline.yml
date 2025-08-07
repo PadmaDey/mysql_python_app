@@ -14,18 +14,21 @@ permissions:
 
 jobs:
   lint:
+    name: Lint Python Code
     uses: ./.github/workflows/lint.yml
 
   sast:
+    name: Static Code Analysis
     needs: lint
     uses: ./.github/workflows/sast.yml
 
   dependencies-scan:
+    name: Dependency Vulnerability Scan
     needs: sast
     uses: ./.github/workflows/dependencies-scan.yml
 
   test:
-    name: Run Py Tests
+    name: Run Python Tests
     needs: dependencies-scan
     uses: ./.github/workflows/test.yml
     secrets: inherit
@@ -46,4 +49,3 @@ jobs:
       image: backend-api
       image_tag: dev-${{ github.sha }}
       environment: dev
-    secrets: inherit
