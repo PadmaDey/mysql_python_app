@@ -16,52 +16,46 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Inject backend env file
+      # Inject backend env file from GitHub secrets
       - name: Write backend env file
         run: |
           mkdir -p env/backend
-          cat <<EOF > env/backend/.env
-          PORT=8080
-          DEBUG=True
-          MYSQL_DATABASE=user_info
-          MYSQL_USER=emp_1
-          MYSQL_PASSWORD=qwerty
-          MYSQL_HOST=mysql
-          MYSQL_PORT=3306
-          SECRET_KEY=8J4U8p2YbDVCoBr7ZertqnnZJCJieGS1U3A0VohBY
-          EOF
+          echo "PORT=${{ secrets.BACKEND_PORT }}" >> env/backend/.env
+          echo "DEBUG=${{ secrets.BACKEND_DEBUG }}" >> env/backend/.env
+          echo "MYSQL_DATABASE=${{ secrets.BACKEND_MYSQL_DATABASE }}" >> env/backend/.env
+          echo "MYSQL_USER=${{ secrets.BACKEND_MYSQL_USER }}" >> env/backend/.env
+          echo "MYSQL_PASSWORD=${{ secrets.BACKEND_MYSQL_PASSWORD }}" >> env/backend/.env
+          echo "MYSQL_HOST=${{ secrets.BACKEND_MYSQL_HOST }}" >> env/backend/.env
+          echo "MYSQL_PORT=${{ secrets.BACKEND_MYSQL_PORT }}" >> env/backend/.env
+          echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> env/backend/.env
 
-      # Inject DB env file (used by Makefile/docker-compose)
+      # Inject DB env file
       - name: Write DB env file
         run: |
           mkdir -p env/db
-          cat <<EOF > env/db/.env
-          MYSQL_ROOT_PASSWORD=Klizos@123
-          MYSQL_DATABASE=user_info
-          MYSQL_USER=emp_1
-          MYSQL_PASSWORD=qwerty
-          EOF
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_MYSQL_ROOT_PASSWORD }}" >> env/db/.env
+          echo "MYSQL_DATABASE=${{ secrets.DB_MYSQL_DATABASE }}" >> env/db/.env
+          echo "MYSQL_USER=${{ secrets.DB_MYSQL_USER }}" >> env/db/.env
+          echo "MYSQL_PASSWORD=${{ secrets.DB_MYSQL_PASSWORD }}" >> env/db/.env
 
       # Inject test env file
       - name: Write test env file
         run: |
-          cat <<EOF > .env.test
-          ENV=local
-          SECRET_KEY=testsecretkey
-          MYSQL_HOST=localhost
-          MYSQL_PORT=3306
-          MYSQL_DATABASE=user_info
-          MYSQL_USER=emp_1
-          MYSQL_PASSWORD=qwerty
-          EOF
+          echo "ENV=${{ secrets.TEST_ENV }}" >> .env.test
+          echo "SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}" >> .env.test
+          echo "MYSQL_HOST=${{ secrets.TEST_MYSQL_HOST }}" >> .env.test
+          echo "MYSQL_PORT=${{ secrets.TEST_MYSQL_PORT }}" >> .env.test
+          echo "MYSQL_DATABASE=${{ secrets.TEST_MYSQL_DATABASE }}" >> .env.test
+          echo "MYSQL_USER=${{ secrets.TEST_MYSQL_USER }}" >> .env.test
+          echo "MYSQL_PASSWORD=${{ secrets.TEST_MYSQL_PASSWORD }}" >> .env.test
 
-      # Start MySQL container using injected values
+      # Start MySQL container
       - name: Start MySQL Container
         env:
-          MYSQL_ROOT_PASSWORD: Klizos@123
-          MYSQL_DATABASE: user_info
-          MYSQL_USER: emp_1
-          MYSQL_PASSWORD: qwerty
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.DB_MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.DB_MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_MYSQL_PASSWORD }}
         run: |
           docker run -d \
             --name mysql-container \

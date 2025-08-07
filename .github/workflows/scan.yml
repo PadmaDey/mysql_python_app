@@ -36,7 +36,7 @@ jobs:
 
       - name: Load Docker Image
         run: |
-          echo "Loading Docker image: ${{ inputs.image }}-${{ inputs.image_tag }}"
+          echo "Loading Docker image: ${{ inputs.image }}:${{ inputs.image_tag }}"
           docker load -i ${{ inputs.image }}-${{ inputs.image_tag }}.tar
 
       - name: Scan Image with Trivy
@@ -49,7 +49,7 @@ jobs:
           vuln-type: os,library
           scanners: vuln
           output: trivy-report.txt
-          exit-code: 0  # prevent job failure even if vulnerabilities are found
+          exit-code: 0  # Don't fail build on findings
 
       - name: Upload Trivy Scan Report
         if: always()

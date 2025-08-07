@@ -5,22 +5,22 @@ inputs:
   secret_key:
     description: Application secret key
     required: false
-    default: testsecretkey
+    default: ${{ secrets.TEST_SECRET_KEY }}
   mysql_host:
-    default: localhost
     required: false
+    default: ${{ secrets.TEST_MYSQL_HOST }}
   mysql_port:
-    default: "3306"
     required: false
+    default: ${{ secrets.TEST_MYSQL_PORT }}
   mysql_database:
-    default: user_info
     required: false
+    default: ${{ secrets.TEST_MYSQL_DATABASE }}
   mysql_user:
-    default: emp_1
     required: false
+    default: ${{ secrets.TEST_MYSQL_USER }}
   mysql_password:
-    default: qwerty
     required: false
+    default: ${{ secrets.TEST_MYSQL_PASSWORD }}
 
 runs:
   using: "composite"

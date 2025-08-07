@@ -26,6 +26,23 @@ runs:
         docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
       shell: bash
 
+    - name: Inject Environment Variables from GitHub Secrets
+      run: |
+        echo "Exporting environment variables from secrets..."
+
+        echo "PORT=${{ secrets.BACKEND_PORT }}" >> $GITHUB_ENV
+        echo "DEBUG=${{ secrets.BACKEND_DEBUG }}" >> $GITHUB_ENV
+        echo "MYSQL_DATABASE=${{ secrets.BACKEND_MYSQL_DATABASE }}" >> $GITHUB_ENV
+        echo "MYSQL_USER=${{ secrets.BACKEND_MYSQL_USER }}" >> $GITHUB_ENV
+        echo "MYSQL_PASSWORD=${{ secrets.BACKEND_MYSQL_PASSWORD }}" >> $GITHUB_ENV
+        echo "MYSQL_HOST=${{ secrets.BACKEND_MYSQL_HOST }}" >> $GITHUB_ENV
+        echo "MYSQL_PORT=${{ secrets.BACKEND_MYSQL_PORT }}" >> $GITHUB_ENV
+        echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> $GITHUB_ENV
+
+        echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
+
+      shell: bash
+
     - name: Build Docker Image with Optional Tag
       run: |
         echo "CI=${CI}"

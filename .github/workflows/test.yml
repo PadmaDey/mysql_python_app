@@ -1,7 +1,7 @@
 name: Python Backend Tests
 
 on:
-  workflow_call:
+  workflow_call: {}
 
 jobs:
   run-tests:
@@ -37,26 +37,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Wait for MySQL to be ready
-        run: |
-          for i in {1..10}; do
-            if mysqladmin ping -h"127.0.0.1" -u${{ secrets.DB_MYSQL_USER }} -p${{ secrets.DB_MYSQL_PASSWORD }} --silent; then
-              echo "MySQL is ready."
-              break
-            fi
-            echo "Waiting for MySQL... ($i)"
-            sleep 5
-          done
-
       - name: Export environment variables
         run: |
           echo "PORT=${{ secrets.BACKEND_PORT }}" >> $GITHUB_ENV
           echo "DEBUG=${{ secrets.BACKEND_DEBUG }}" >> $GITHUB_ENV
-          echo "MYSQL_DATABASE=${{ secrets.BACKEND_MYSQL_DATABASE }}" >> $GITHUB_ENV
-          echo "MYSQL_USER=${{ secrets.BACKEND_MYSQL_USER }}" >> $GITHUB_ENV
-          echo "MYSQL_PASSWORD=${{ secrets.BACKEND_MYSQL_PASSWORD }}" >> $GITHUB_ENV
-          echo "MYSQL_HOST=${{ secrets.BACKEND_MYSQL_HOST }}" >> $GITHUB_ENV
-          echo "MYSQL_PORT=${{ secrets.BACKEND_MYSQL_PORT }}" >> $GITHUB_ENV
+          echo "MYSQL_DATABASE=${{ secrets.DB_MYSQL_DATABASE }}" >> $GITHUB_ENV
+          echo "MYSQL_USER=${{ secrets.DB_MYSQL_USER }}" >> $GITHUB_ENV
+          echo "MYSQL_PASSWORD=${{ secrets.DB_MYSQL_PASSWORD }}" >> $GITHUB_ENV
+          echo "MYSQL_HOST=${{ secrets.TEST_MYSQL_HOST || 'localhost' }}" >> $GITHUB_ENV
+          echo "MYSQL_PORT=${{ secrets.TEST_MYSQL_PORT || '3306' }}" >> $GITHUB_ENV
           echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> $GITHUB_ENV
           echo "ENV=${{ secrets.TEST_ENV }}" >> $GITHUB_ENV
           echo "TEST_SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}" >> $GITHUB_ENV

@@ -36,6 +36,7 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       image_tag: dev-${{ github.sha }}
+    secrets: inherit
 
   scan:
     name: Docker Vulnerability Scan
@@ -45,3 +46,4 @@ jobs:
       image: backend-api
       image_tag: dev-${{ github.sha }}
       environment: dev
+    secrets: inherit
