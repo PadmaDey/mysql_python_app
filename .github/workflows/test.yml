@@ -30,18 +30,25 @@ jobs:
   run-tests:
     runs-on: ubuntu-latest
 
+    # Set env at job level so it's accessible in services/env
+    env:
+      MYSQL_ROOT_PASSWORD: ${{ secrets.DB_MYSQL_ROOT_PASSWORD }}
+      MYSQL_DATABASE: ${{ secrets.DB_MYSQL_DATABASE }}
+      MYSQL_USER: ${{ secrets.DB_MYSQL_USER }}
+      MYSQL_PASSWORD: ${{ secrets.DB_MYSQL_PASSWORD }}
+
     services:
       mysql:
         image: mysql:latest
         env:
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_MYSQL_ROOT_PASSWORD }}
-          MYSQL_DATABASE: ${{ secrets.DB_MYSQL_DATABASE }}
-          MYSQL_USER: ${{ secrets.DB_MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.DB_MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h localhost -u${{ secrets.DB_MYSQL_USER }} -p${{ secrets.DB_MYSQL_PASSWORD }}"
+          --health-cmd="mysqladmin ping -h localhost -u${MYSQL_USER} -p${MYSQL_PASSWORD}"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
@@ -73,9 +80,8 @@ jobs:
           echo "ENV=${{ secrets.TEST_ENV }}" >> $GITHUB_ENV
           echo "TEST_SECRET_KEY=${{ secrets.TEST_SECRET_KEY }}" >> $GITHUB_ENV
           echo "PYTHONPATH=backend" >> $GITHUB_ENV
-        shell: bash
 
-      - name: Set default values for optional env vars (fallbacks)
+      - name: Set default values for optional env vars
         run: |
           echo "MYSQL_HOST=${MYSQL_HOST:-localhost}" >> $GITHUB_ENV
           echo "MYSQL_PORT=${MYSQL_PORT:-3306}" >> $GITHUB_ENV
