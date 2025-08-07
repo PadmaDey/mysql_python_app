@@ -29,6 +29,7 @@ jobs:
           echo "MYSQL_PORT=${{ secrets.BACKEND_MYSQL_PORT }}" >> env/backend/.env
           echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> env/backend/.env
 
+
       # Inject DB env file
       - name: Write DB env file
         run: |
