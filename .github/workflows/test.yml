@@ -21,6 +21,12 @@ on:
         required: true
       TEST_MYSQL_PORT:
         required: true
+      TEST_MYSQL_DATABASE:
+        required: true
+      TEST_MYSQL_USER:
+        required: true
+      TEST_MYSQL_PASSWORD:
+        required: true
       TEST_ENV:
         required: true
       TEST_SECRET_KEY:
@@ -89,13 +95,24 @@ jobs:
           SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
           MYSQL_HOST: ${{ secrets.TEST_MYSQL_HOST }}
           MYSQL_PORT: ${{ secrets.TEST_MYSQL_PORT }}
-          MYSQL_DATABASE: ${{ secrets.DB_MYSQL_DATABASE }}
-          MYSQL_USER: ${{ secrets.DB_MYSQL_USER }}
-          MYSQL_PASSWORD: ${{ secrets.DB_MYSQL_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.TEST_MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.TEST_MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.TEST_MYSQL_PASSWORD }}
 
       - name: Run tests
-        run: pytest tests
+        run: |
+          echo "Running tests in: tests"
+          pytest tests
         working-directory: backend
+        env:
+          PYTHONPATH: backend
+          ENV: ${{ secrets.TEST_ENV }}
+          SECRET_KEY: ${{ secrets.TEST_SECRET_KEY }}
+          MYSQL_HOST: ${{ secrets.TEST_MYSQL_HOST }}
+          MYSQL_PORT: ${{ secrets.TEST_MYSQL_PORT }}
+          MYSQL_DATABASE: ${{ secrets.TEST_MYSQL_DATABASE }}
+          MYSQL_USER: ${{ secrets.TEST_MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ secrets.TEST_MYSQL_PASSWORD }}
 
       - name: Clean up Docker containers
         if: always()
