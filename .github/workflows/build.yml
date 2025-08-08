@@ -1,4 +1,4 @@
-name: Reusable Docker Build Workflow
+name: Build Docker Images
 
 on:
   workflow_call:
@@ -24,7 +24,6 @@ on:
         required: true
       BACKEND_SECRET_KEY:
         required: true
-
       DB_MYSQL_ROOT_PASSWORD:
         required: true
       DB_MYSQL_DATABASE:
@@ -33,7 +32,6 @@ on:
         required: true
       DB_MYSQL_PASSWORD:
         required: true
-
       TEST_ENV:
         required: false
       TEST_SECRET_KEY:
@@ -57,6 +55,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # --------------------------
+      # Write environment files
+      # --------------------------
       - name: Write backend env file
         run: |
           mkdir -p env/backend
@@ -87,6 +88,9 @@ jobs:
           echo "MYSQL_USER=${{ secrets.TEST_MYSQL_USER }}" >> .env.test
           echo "MYSQL_PASSWORD=${{ secrets.TEST_MYSQL_PASSWORD }}" >> .env.test
 
+      # --------------------------
+      # Start DB
+      # --------------------------
       - name: Start MySQL Container
         env:
           MYSQL_ROOT_PASSWORD: ${{ secrets.DB_MYSQL_ROOT_PASSWORD }}
@@ -119,13 +123,76 @@ jobs:
             sleep 3
           done
 
-      - name: Setup Docker
-        uses: ./.github/actions/docker/setup
+      # --------------------------
+      # Setup Docker (merged setup/action.yml)
+      # --------------------------
+      - name: 🔧 Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker Image
-        uses: ./.github/actions/docker/build
+      - name: Install Docker Compose CLI (v2)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+        shell: bash
+
+      # --------------------------
+      # Build (merged build/action.yml)
+      # --------------------------
+      - name: Ensure Build Cache Directory Exists
+        run: mkdir -p /tmp/.buildx-cache
+
+      - name: Restore Docker Build Cache
+        uses: actions/cache@v4
         with:
-          image_tag: ${{ inputs.image_tag }}
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Kill Conflicting MySQL Containers
+        run: |
+          docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
+
+      - name: Inject Environment Variables from Secrets
+        run: |
+          echo "PORT=${{ secrets.BACKEND_PORT }}" >> $GITHUB_ENV
+          echo "DEBUG=${{ secrets.BACKEND_DEBUG }}" >> $GITHUB_ENV
+          echo "MYSQL_DATABASE=${{ secrets.BACKEND_MYSQL_DATABASE }}" >> $GITHUB_ENV
+          echo "MYSQL_USER=${{ secrets.BACKEND_MYSQL_USER }}" >> $GITHUB_ENV
+          echo "MYSQL_PASSWORD=${{ secrets.BACKEND_MYSQL_PASSWORD }}" >> $GITHUB_ENV
+          echo "MYSQL_HOST=${{ secrets.BACKEND_MYSQL_HOST }}" >> $GITHUB_ENV
+          echo "MYSQL_PORT=${{ secrets.BACKEND_MYSQL_PORT }}" >> $GITHUB_ENV
+          echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> $GITHUB_ENV
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Build Docker Image with Optional Tag
+        run: |
+          echo "CI=${CI}"
+          make down || true
+          make build
+
+          IMAGE_ID=$(docker images -q | head -n 1)
+          if [ -n "$IMAGE_ID" ]; then
+            docker tag "$IMAGE_ID" backend-api:latest
+            echo "Tagged $IMAGE_ID as backend-api:latest"
+
+            if [ -n "${{ inputs.image_tag }}" ]; then
+              docker tag "$IMAGE_ID" backend-api:${{ inputs.image_tag }}
+              echo "Also tagged as backend-api:${{ inputs.image_tag }}"
+            fi
+          else
+            echo "No image found to tag"
+            exit 1
+          fi
+        env:
+          CI: true
+          DOCKER_BUILDKIT: 0
+
+      - name: List Docker Images (Debug)
+        run: docker images
+
+      - name: Wait for Services to Initialize
+        run: sleep 20
 
       - name: Save Docker Image to Tarball
         run: |
