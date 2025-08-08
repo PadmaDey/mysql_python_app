@@ -1,76 +1,91 @@
 name: Build Docker Images
-description: Build Docker images using Makefile and clean up MySQL conflicts
 
-inputs:
-  image_tag:
-    description: Custom image tag to apply (e.g., dev-213...)
-    required: false
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        description: Custom image tag (e.g., dev-213...)
+        required: false
+        type: string
+    secrets:
+      BACKEND_PORT:
+        required: true
+      BACKEND_DEBUG:
+        required: true
+      BACKEND_MYSQL_DATABASE:
+        required: true
+      BACKEND_MYSQL_USER:
+        required: true
+      BACKEND_MYSQL_PASSWORD:
+        required: true
+      BACKEND_MYSQL_HOST:
+        required: true
+      BACKEND_MYSQL_PORT:
+        required: true
+      BACKEND_SECRET_KEY:
+        required: true
+      DB_MYSQL_ROOT_PASSWORD:
+        required: true
 
-runs:
-  using: "composite"
-  steps:
-    - name: Ensure Build Cache Directory Exists
-      run: mkdir -p /tmp/.buildx-cache
-      shell: bash
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Restore Docker Build Cache
-      uses: actions/cache@v4
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
+      - name: Ensure Build Cache Directory Exists
+        run: mkdir -p /tmp/.buildx-cache
 
-    - name: Kill Conflicting MySQL Containers
-      run: |
-        docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
-      shell: bash
+      - name: Restore Docker Build Cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
-    - name: Inject Environment Variables from GitHub Secrets
-      run: |
-        echo "Exporting environment variables from secrets..."
+      - name: Kill Conflicting MySQL Containers
+        run: |
+          docker ps -q --filter expose=3306 | xargs -r docker rm -f || true
 
-        echo "PORT=${{ secrets.BACKEND_PORT }}" >> $GITHUB_ENV
-        echo "DEBUG=${{ secrets.BACKEND_DEBUG }}" >> $GITHUB_ENV
-        echo "MYSQL_DATABASE=${{ secrets.BACKEND_MYSQL_DATABASE }}" >> $GITHUB_ENV
-        echo "MYSQL_USER=${{ secrets.BACKEND_MYSQL_USER }}" >> $GITHUB_ENV
-        echo "MYSQL_PASSWORD=${{ secrets.BACKEND_MYSQL_PASSWORD }}" >> $GITHUB_ENV
-        echo "MYSQL_HOST=${{ secrets.BACKEND_MYSQL_HOST }}" >> $GITHUB_ENV
-        echo "MYSQL_PORT=${{ secrets.BACKEND_MYSQL_PORT }}" >> $GITHUB_ENV
-        echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> $GITHUB_ENV
+      - name: Inject Environment Variables from Secrets
+        run: |
+          echo "PORT=${{ secrets.BACKEND_PORT }}" >> $GITHUB_ENV
+          echo "DEBUG=${{ secrets.BACKEND_DEBUG }}" >> $GITHUB_ENV
+          echo "MYSQL_DATABASE=${{ secrets.BACKEND_MYSQL_DATABASE }}" >> $GITHUB_ENV
+          echo "MYSQL_USER=${{ secrets.BACKEND_MYSQL_USER }}" >> $GITHUB_ENV
+          echo "MYSQL_PASSWORD=${{ secrets.BACKEND_MYSQL_PASSWORD }}" >> $GITHUB_ENV
+          echo "MYSQL_HOST=${{ secrets.BACKEND_MYSQL_HOST }}" >> $GITHUB_ENV
+          echo "MYSQL_PORT=${{ secrets.BACKEND_MYSQL_PORT }}" >> $GITHUB_ENV
+          echo "SECRET_KEY=${{ secrets.BACKEND_SECRET_KEY }}" >> $GITHUB_ENV
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
 
-        echo "MYSQL_ROOT_PASSWORD=${{ secrets.DB_MYSQL_ROOT_PASSWORD }}" >> $GITHUB_ENV
+      - name: Build Docker Image with Optional Tag
+        run: |
+          echo "CI=${CI}"
+          make down || true
+          make build
 
-      shell: bash
+          IMAGE_ID=$(docker images -q | head -n 1)
+          if [ -n "$IMAGE_ID" ]; then
+            docker tag "$IMAGE_ID" backend-api:latest
+            echo "Tagged $IMAGE_ID as backend-api:latest"
 
-    - name: Build Docker Image with Optional Tag
-      run: |
-        echo "CI=${CI}"
-        make down || true
-        make build
-
-        IMAGE_ID=$(docker images -q | head -n 1)
-        if [ -n "$IMAGE_ID" ]; then
-          docker tag "$IMAGE_ID" backend-api:latest
-          echo "Tagged $IMAGE_ID as backend-api:latest"
-
-          if [ -n "${{ inputs.image_tag }}" ]; then
-            docker tag "$IMAGE_ID" backend-api:${{ inputs.image_tag }}
-            echo "Also tagged as backend-api:${{ inputs.image_tag }}"
+            if [ -n "${{ inputs.image_tag }}" ]; then
+              docker tag "$IMAGE_ID" backend-api:${{ inputs.image_tag }}
+              echo "Also tagged as backend-api:${{ inputs.image_tag }}"
+            fi
+          else
+            echo "No image found to tag"
+            exit 1
           fi
-        else
-          echo "No image found to tag"
-          exit 1
-        fi
-      shell: bash
-      env:
-        CI: true
-        DOCKER_BUILDKIT: 0
+        env:
+          CI: true
+          DOCKER_BUILDKIT: 0
 
-    - name: List Docker Images (Debug)
-      run: docker images
-      shell: bash
+      - name: List Docker Images (Debug)
+        run: docker images
 
-    - name: Wait for Services to Initialize
-      run: sleep 20
-      shell: bash
+      - name: Wait for Services to Initialize
+        run: sleep 20
