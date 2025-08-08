@@ -2,9 +2,9 @@ name: Full CI Pipeline
 
 on:
   push:
-    branches: [main_copy]
+    branches: [main]
   pull_request:
-    branches: [main_copy]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
