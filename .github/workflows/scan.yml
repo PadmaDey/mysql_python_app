@@ -49,7 +49,7 @@ jobs:
           vuln-type: os,library
           scanners: vuln
           output: trivy-report.txt
-          exit-code: 0  # Don't fail build on findings
+          exit-code: 0 
 
       - name: Upload Trivy Scan Report
         if: always()
