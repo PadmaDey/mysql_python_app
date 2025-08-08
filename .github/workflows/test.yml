@@ -103,7 +103,7 @@ jobs:
         run: |
           echo "Running tests in: tests"
           pytest tests
-        working-directory: backend
+        # working-directory: backend
         env:
           PYTHONPATH: backend
           ENV: ${{ secrets.TEST_ENV }}
