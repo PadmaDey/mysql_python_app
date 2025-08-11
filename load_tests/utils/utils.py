@@ -86,6 +86,29 @@ def auth_headers(token: str) -> dict:
 
 
 # ------------------------
+# Common Test Setup Helpers
+# ------------------------
+def signup_and_login(client) -> str:
+    """
+    Creates a random user, logs them in, and returns the JWT token.
+    Raises RuntimeError if signup or login fails.
+    """
+    # Step 1: Sign up
+    signup_data, password = signup_payload()
+    with client.post("/api/users/signup", json=signup_data, catch_response=True) as resp:
+        if resp.status_code != 201:
+            raise RuntimeError(f"Signup failed: {resp.status_code} - {resp.text}")
+        resp.success()
+
+    # Step 2: Login
+    with client.post("/api/users/login", json=login_payload(signup_data["email"], password), catch_response=True) as resp:
+        if resp.status_code != 200:
+            raise RuntimeError(f"Login failed: {resp.status_code} - {resp.text}")
+        resp.success()
+        return resp.json().get("token")
+    
+    
+# ------------------------
 # Cleanup Functions
 # ------------------------
 def cleanup_test_users():
