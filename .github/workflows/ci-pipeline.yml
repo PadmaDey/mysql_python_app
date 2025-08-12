@@ -35,13 +35,15 @@ jobs:
   
   load-test:
     name: Run Load Tests
-    needs: test
+    needs: dependencies-scan
     uses: ./.github/workflows/load-test.yml
     secrets: inherit
 
   build:
     name: Build Docker Image
-    needs: test
+    needs: 
+      - test
+      - load-test
     uses: ./.github/workflows/build.yml
     with:
       image_tag: dev-${{ github.sha }}
