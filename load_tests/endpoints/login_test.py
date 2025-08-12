@@ -18,11 +18,7 @@ class LoginUserMixin:
 
     @task
     def login_user(self):
-        with self.client.post(
-            "/api/users/login",
-            json=login_payload(self.user_email, self.user_password),
-            catch_response=True
-        ) as response:
+        with self.client.post("/api/users/login", json=login_payload(self.user_email, self.user_password), catch_response=True) as response:
             if response.status_code == 200:
                 self.token = response.json().get("token")
                 response.success()
