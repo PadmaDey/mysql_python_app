@@ -1,41 +1,42 @@
 from locust import task
-from load_tests.utils.utils import signup_and_login, auth_headers
+from load_tests.utils.utils import signup_payload, login_payload, auth_headers
 
 
 class DeleteUserDataMixin:
-    """
-    Mixin to test the 'delete user data' endpoint.
-    Creates and logs in a fresh user before performing delete.
-    """
-
     def on_start(self):
-        """Sign up a random user and log them in before running the test."""
-        try:
-            self.token = signup_and_login(self.client)
-        except RuntimeError as e:
-            self.token = None
-            if hasattr(self.environment, "events"):
-                # Record setup failure in Locust's stats
-                self.environment.events.request_failure.fire(
-                    request_type="SETUP",
-                    name="delete_user_data_setup",
-                    response_time=0,
-                    response_length=0,
-                    exception=e,
+        signup_data, password = signup_payload()
+        self.user_email = signup_data["email"]
+        self.user_password = password
+
+        with self.client.post("/api/users/signup", json=signup_data, catch_response=True) as response:
+            if response.status_code != 201:
+                response.failure(
+                    f"Signup before deleting user data failed: {response.status_code} - {response.text}"
                 )
+                self.token = None
+                return
+            else:
+                response.success()
+
+        with self.client.post("/api/users/login", json=login_payload(self.user_email, self.user_password), catch_response=True) as response:
+            if response.status_code == 200:
+                self.token = response.json().get("token")
+                response.success()
+            else:
+                response.failure(
+                    f"Login before deleting user data failed: {response.status_code} - {response.text}"
+                )
+                self.token = None
 
     @task
     def delete_user_data(self):
-        """Send DELETE request to remove user data."""
         if not self.token:
-            return  # Skip if setup failed
+            return
 
-        with self.client.delete(
-            "/api/users/delete-data",
-            headers=auth_headers(self.token),
-            catch_response=True
-        ) as response:
+        with self.client.delete("/api/users/delete-data", headers=auth_headers(self.token), catch_response=True) as response:
             if response.status_code == 200:
                 response.success()
             else:
-                response.failure(f"Delete user data failed: {response.status_code} - {response.text}")
+                response.failure(
+                    f"Delete user data failed: {response.status_code} - {response.text}"
+                )
