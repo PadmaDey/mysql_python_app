@@ -32,6 +32,12 @@ jobs:
     needs: dependencies-scan
     uses: ./.github/workflows/test.yml
     secrets: inherit
+  
+  load-test:
+    name: Run Load Tests
+    needs: test
+    uses: ./.github/workflows/load-test.yml
+    secrets: inherit
 
   build:
     name: Build Docker Image
