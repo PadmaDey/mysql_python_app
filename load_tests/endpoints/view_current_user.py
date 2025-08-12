@@ -1,15 +1,20 @@
-# load_tests/endpoints/view_current_user.py
-from locust import task
+from locust import HttpUser, between, task
 from load_tests.utils.utils import signup_payload, login_payload, auth_headers
 
 
-class ViewCurrentUserMixin:
+class ViewCurrentUserTest(HttpUser):
+    wait_time = between(1, 3)
+
     def on_start(self):
         signup_data, password = signup_payload()
         self.user_email = signup_data["email"]
         self.user_password = password
 
-        with self.client.post("/api/users/signup", json=signup_data, catch_response=True) as response:
+        with self.client.post(
+            "/api/users/signup",
+            json=signup_data,
+            catch_response=True
+        ) as response:
             if response.status_code != 201:
                 response.failure(
                     f"Signup before viewing current user failed: {response.status_code} - {response.text}"
@@ -19,7 +24,11 @@ class ViewCurrentUserMixin:
             else:
                 response.success()
 
-        with self.client.post("/api/users/login", json=login_payload(self.user_email, self.user_password), catch_response=True) as response:
+        with self.client.post(
+            "/api/users/login",
+            json=login_payload(self.user_email, self.user_password),
+            catch_response=True
+        ) as response:
             if response.status_code == 200:
                 self.token = response.json().get("token")
                 response.success()
@@ -29,13 +38,16 @@ class ViewCurrentUserMixin:
                 )
                 self.token = None
 
-
     @task
     def view_current_user(self):
         if not self.token:
             return
 
-        with self.client.get("/api/users/me", headers=auth_headers(self.token), catch_response=True) as response:
+        with self.client.get(
+            "/api/users/me",
+            headers=auth_headers(self.token),
+            catch_response=True
+        ) as response:
             if response.status_code == 200:
                 response.success()
             else:
